@@ -1,0 +1,3291 @@
+<meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Cinzel:wght@600&family=Grenze+Gotisch:wght@500&display=swap');
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+#wrap {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #08050b url('./img/general/fondo-casa-halloween.webp') center center / cover no-repeat;
+  border-radius: 8px;
+  font-family: 'Cormorant Garamond', serif;
+}
+#c {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+  /* El lienzo ocupa toda la pantalla, pero el render 3D mantiene
+     siempre el formato 16:9 para que la casa y la muñeca no se deformen. */
+}
+#c.grabbing { cursor: grabbing; }
+#c.hoverable { cursor: url('./img/ui/cursor-calaverita.svg') 18 19, pointer; }
+/* Calaverita también sobre controles clicables de la interfaz */
+button:hover, a:hover, [role='button']:hover { cursor: url('./img/ui/cursor-calaverita.svg') 18 19, pointer; }
+
+#hint {
+  position: absolute;
+  top: 18px; left: 50%;
+  transform: translate(-50%, 0);
+  color: #e8d9c5;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  font-style: italic;
+  text-shadow: 0 0 10px rgba(255,180,90,0.35), 0 1px 3px rgba(0,0,0,0.6);
+  opacity: 0.85;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+#hint.hidden { opacity: 0; }
+
+#facade-btn {
+  position: absolute;
+  top: 18px; right: 18px;
+  z-index: 20;
+  display: none;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #170a26;
+  background: linear-gradient(180deg, #f2c98a, #d9a85c);
+  border: none;
+  border-radius: 3px;
+  padding: 10px 16px;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.4);
+}
+#facade-btn.visible { display: block; }
+#facade-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.4); }
+#facade-btn:active { transform: translateY(0); }
+
+#room-panel {
+  position: absolute;
+  bottom: 28px; left: 50%;
+  transform: translate(-50%, 12px);
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+#room-panel.visible { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+
+#room-label {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f2c98a;
+  text-shadow: 0 0 12px rgba(255,170,70,0.5), 0 1px 2px rgba(0,0,0,0.8);
+}
+#room-desc {
+  font-size: 14px;
+  font-style: italic;
+  color: #cbb8d8;
+  max-width: 320px;
+  text-align: center;
+  line-height: 1.3;
+}
+
+#exit-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #170a26;
+  background: linear-gradient(180deg, #f2c98a, #d9a85c);
+  border: none;
+  border-radius: 3px;
+  padding: 9px 22px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+#exit-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(0,0,0,0.5); }
+#exit-btn:active { transform: translateY(0); }
+
+#interior-controls {
+  position: absolute;
+  top: 18px; left: 18px;
+  display: none;
+  padding: 9px 13px;
+  border: 1px solid rgba(242,201,138,.35);
+  border-radius: 4px;
+  background: rgba(13,6,22,.72);
+  color: #e8d9c5;
+  font-size: 13px;
+  line-height: 1.35;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0,0,0,.8);
+}
+#interior-controls.visible { display: block; }
+
+#room-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 3, 14, .72);
+  color: #f2c98a;
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+#room-loading.visible { opacity: 1; }
+#mirror-report-modal { position:fixed; inset:0; z-index:10000; display:none; align-items:center; justify-content:center; padding:24px; box-sizing:border-box; background:rgba(5,3,8,.88); }
+#mirror-report-modal.visible { display:flex; }
+#mirror-report-modal img { display:block; max-width:min( min(100%, 1024px), 94vw); max-height:88vh; width:auto; height:auto; object-fit:contain; box-shadow:0 8px 40px rgba(0,0,0,.65); }
+#mirror-report-close { position:absolute; top:16px; right:20px; width:44px; height:44px; border:1px solid #d8c7a5; border-radius:50%; background:#211522; color:#fff3d7; font-size:28px; cursor:pointer; line-height:1; }
+#mirror-report-close:focus-visible { outline:3px solid #f2c98a; outline-offset:3px; }
+
+
+/* Ventana del vídeo del Salón: se superpone sin alterar la escena 3D. */
+#salon-video-modal { position:fixed; inset:0; z-index:10010; display:none; align-items:center; justify-content:center; padding:clamp(12px,4vw,42px); box-sizing:border-box; background:rgba(5,3,8,.91); }
+#salon-video-modal.visible { display:flex; }
+#salon-video-frame { position:relative; width:min(960px,94vw); max-height:88vh; padding:clamp(8px,2vw,16px); border:2px solid #69527c; border-radius:10px; background:#170f20; box-shadow:0 18px 70px rgba(0,0,0,.85), 0 0 28px rgba(102,69,131,.28); }
+#salon-video-player { display:block; width:100%; max-height:calc(88vh - 32px); object-fit:contain; background:#000; }
+#salon-video-close { position:absolute; right:-12px; top:-16px; width:40px; height:40px; border:1px solid #e6d1f1; border-radius:50%; color:#fff; background:#382248; font:28px/1 sans-serif; cursor:pointer; z-index:1; }
+#salon-video-close:focus-visible { outline:3px solid #f2c98a; outline-offset:3px; }
+#salon-painting-video-modal { position:fixed; inset:0; z-index:10011; display:none; align-items:center; justify-content:center; padding:clamp(12px,4vw,42px); box-sizing:border-box; background:rgba(5,3,8,.91); }
+#salon-painting-video-modal.visible { display:flex; }
+#salon-painting-video-frame { position:relative; width:min(960px,94vw); max-height:88vh; padding:clamp(8px,2vw,16px); border:2px solid #69527c; border-radius:10px; background:#170f20; box-shadow:0 18px 70px rgba(0,0,0,.85); }
+#salon-painting-video-player { display:block; width:100%; max-height:calc(88vh - 32px); object-fit:contain; background:#000; }
+#salon-painting-video-close { position:absolute; right:-12px; top:-16px; width:40px; height:40px; border:1px solid #e6d1f1; border-radius:50%; color:#fff; background:#382248; font:28px/1 sans-serif; cursor:pointer; z-index:1; }
+#salon-painting-video-close:focus-visible { outline:3px solid #f2c98a; outline-offset:3px; }
+
+
+
+/* Presentación de Rapunzel: visor PDF superpuesto sin modificar la escena. */
+#rapunzel-pdf-modal { position:fixed; inset:0; z-index:10030; display:none; align-items:center; justify-content:center; padding:clamp(12px,3vw,32px); box-sizing:border-box; background:rgba(5,3,8,.92); }
+#rapunzel-pdf-modal.visible { display:flex; }
+#rapunzel-pdf-frame { position:relative; width:min(1120px,96vw); height:min(92vh,900px); padding:42px 12px 12px; box-sizing:border-box; background:#170f20; border:2px solid #69527c; border-radius:10px; box-shadow:0 18px 70px rgba(0,0,0,.85); }
+#rapunzel-pdf-viewer { width:100%; height:100%; overflow-y:auto; overscroll-behavior:contain; background:#21192a; text-align:center; user-select:none; }
+#rapunzel-pdf-viewer img { display:block; width:100%; max-width:980px; height:auto; margin:0 auto 12px; pointer-events:none; }
+#rapunzel-pdf-close { position:absolute; top:5px; right:10px; width:36px; height:34px; cursor:pointer; border:1px solid #9c82b2; border-radius:5px; color:#fff; background:#35223e; font-size:25px; line-height:1; }
+#rapunzel-pdf-frame .pdf-fallback { position:absolute; left:14px; top:12px; color:#eee; font-size:12px; }
+#rapunzel-pdf-frame .pdf-fallback a { color:#e9caff; }
+
+/* Vídeo del cuadro Pig Fiction del Estudio. */
+#pig-video-modal { position:fixed; inset:0; z-index:10035; display:none; align-items:center; justify-content:center; padding:clamp(12px,4vw,42px); box-sizing:border-box; background:rgba(5,3,8,.91); }
+#pig-video-modal.visible { display:flex; }
+#pig-video-frame { position:relative; width:min(960px,94vw); max-height:88vh; padding:clamp(8px,2vw,16px); border:2px solid #69527c; border-radius:10px; background:#170f20; box-shadow:0 18px 70px rgba(0,0,0,.85); }
+#pig-video-player { display:block; width:100%; max-height:calc(88vh - 32px); object-fit:contain; background:#000; }
+#pig-video-close { position:absolute; right:-12px; top:-16px; width:40px; height:40px; border:1px solid #e6d1f1; border-radius:50%; color:#fff; background:#382248; font:28px/1 sans-serif; cursor:pointer; z-index:1; }
+
+#ghost-video-modal { position:fixed; inset:0; z-index:10045; display:none; align-items:center; justify-content:center; padding:clamp(12px,4vw,42px); box-sizing:border-box; background:rgba(5,3,8,.91); }
+#ghost-video-modal.visible { display:flex; }
+#ghost-video-frame { position:relative; width:min(960px,94vw); padding:clamp(8px,2vw,16px); background:#170f20; border:2px solid #69527c; border-radius:10px; box-shadow:0 18px 70px #000c; }
+#ghost-video-player { display:block; width:100%; max-height:calc(88vh - 32px); object-fit:contain; background:#000; }
+#ghost-video-close { position:absolute; right:-12px; top:-16px; width:40px; height:40px; border:1px solid #e6d1f1; border-radius:50%; color:#fff; background:#382248; font:28px/1 sans-serif; cursor:pointer; }
+
+/* Visor del cómic Abismo: imágenes, sin enlace al PDF original. */
+#abismo-modal {position:fixed;inset:0;z-index:10035;display:none;align-items:center;justify-content:center;padding:clamp(12px,3vw,32px);box-sizing:border-box;background:rgba(5,3,8,.92)}
+#abismo-modal.visible {display:flex}
+#abismo-frame {position:relative;width:min(1120px,96vw);height:min(92vh,900px);padding:42px 12px 12px;box-sizing:border-box;background:#170f20;border:2px solid #69527c;border-radius:10px;box-shadow:0 18px 70px rgba(0,0,0,.85)}
+#abismo-viewer {container-type:size;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;overscroll-behavior:contain;background:#21192a;text-align:center;user-select:none;-webkit-user-select:none}
+#abismo-viewer img {display:block;width:100%;max-width:980px;height:100%;object-fit:contain;scroll-snap-align:start;scroll-snap-stop:always;margin:0 auto 12px;pointer-events:none}
+/* Las hojas de texto comparten el ancho visible de las páginas A4 ilustradas. */
+#abismo-viewer img:nth-child(odd) {max-width:min(980px,70.695553cqh);}
+#abismo-close {position:absolute;top:5px;right:10px;width:36px;height:34px;cursor:pointer;border:1px solid #9c82b2;border-radius:5px;color:#fff;background:#35223e;font-size:25px;line-height:1}
+
+/* Zona clicable real, alineada con el póster 3D. No depende del raycaster. */
+#pig-story-link {position:fixed;display:none;z-index:35;opacity:1;background:transparent;border:0;padding:0;cursor:url('./img/ui/cursor-calaverita.svg') 18 19,pointer;touch-action:manipulation;}
+#pig-story-link:hover {outline:none;}
+#pig-story-link:focus, #pig-story-link:focus-visible {outline:none;}
+
+/* Rótulo original: región visible x=901..1636, y=777..995 del PNG 1754x1240. */
+#portfolio-signature {position:fixed;z-index:12;pointer-events:none;aspect-ratio:735/218;overflow:hidden;opacity:1;}
+#portfolio-signature.signature-started {animation:signature-reveal 2.6s ease-out both;}
+#portfolio-signature[hidden] {display:none;}
+#portfolio-signature img {position:absolute;display:block;max-width:none;width:238.6394558%;height:auto;left:-122.585034%;top:-356.4220183%;}
+@keyframes signature-reveal {0%,15%{opacity:0;transform:translate(0,0)}48%{opacity:1;transform:translate(0,0)}51%{transform:translate(-2px,1px)}54%{opacity:.25;transform:translate(2px,-1px)}57%{transform:translate(-1px,0)}60%{opacity:1;transform:translate(1px,1px)}63%{transform:translate(-1px,-1px)}66%{opacity:.5;transform:translate(1px,0)}73%,100%{opacity:1;transform:translate(0,0)}}
+@media (prefers-reduced-motion:reduce) {#portfolio-signature, #portfolio-signature.signature-started {animation:none;}}
+
+/* Música ambiental disponible solo en la fachada y la vista general. */
+#music-toggle {position:absolute;top:18px;left:18px;z-index:60;display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid rgba(206,167,235,.65);border-radius:9px;background:rgba(24,12,36,.88);color:#f4e6ff;font:600 13px/1.2 sans-serif;cursor:pointer;box-shadow:0 3px 14px rgba(0,0,0,.45)}
+#music-toggle:hover {background:rgba(65,34,82,.94)}
+#music-toggle:focus-visible {outline:3px solid #f0ccff;outline-offset:3px}
+#music-toggle[hidden] {display:none}
+
+#personajes-modal {position:fixed;inset:0;z-index:10040;display:none;align-items:center;justify-content:center;padding:clamp(12px,3vw,32px);box-sizing:border-box;background:rgba(5,3,8,.92)}
+#personajes-modal.visible {display:flex}
+#personajes-frame {position:relative;width:min(1120px,96vw);height:min(92vh,900px);padding:42px 12px 12px;box-sizing:border-box;background:#170f20;border:2px solid #69527c;border-radius:10px;box-shadow:0 18px 70px rgba(0,0,0,.85)}
+#personajes-viewer {width:100%;height:100%;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;overscroll-behavior:contain;background:#21192a;text-align:center;user-select:none;-webkit-user-select:none}
+#personajes-viewer img {display:block;width:100%;max-width:980px;height:100%;object-fit:contain;scroll-snap-align:start;scroll-snap-stop:always;margin:0 auto 12px;pointer-events:none}
+#personajes-close {position:absolute;top:5px;right:10px;width:36px;height:34px;cursor:pointer;border:1px solid #9c82b2;border-radius:5px;color:#fff;background:#35223e;font:28px/1 sans-serif}
+#tartalo-video-modal { position:fixed; inset:0; z-index:10011; display:none; align-items:center; justify-content:center; padding:clamp(12px,4vw,42px); box-sizing:border-box; background:rgba(5,3,8,.91); }
+#tartalo-video-modal.visible { display:flex; }
+#tartalo-video-frame { position:relative; width:min(960px,94vw); max-height:88vh; padding:clamp(8px,2vw,16px); border:2px solid #69527c; border-radius:10px; background:#170f20; box-shadow:0 18px 70px rgba(0,0,0,.85); }
+#tartalo-video-player { display:block; width:100%; max-height:calc(88vh - 32px); object-fit:contain; background:#000; }
+#tartalo-video-close { position:absolute; right:-12px; top:-16px; width:40px; height:40px; border:1px solid #e6d1f1; border-radius:50%; color:#fff; background:#382248; font:28px/1 sans-serif; cursor:pointer; z-index:1; }
+#tartalo-video-close:focus-visible { outline:3px solid #f2c98a; outline-offset:3px; }
+
+/* Bienvenida: instrucciones iniciales de exploración. */
+#explore-welcome { box-sizing:border-box; width:min(460px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; padding:30px 26px; border:2px solid #80618e; border-radius:14px; background:#1b1220; color:#f1e4ce; text-align:center; font-family:Georgia,serif; box-shadow:0 18px 70px #0009; }
+#explore-welcome::backdrop { background:rgba(5,3,8,.78); }
+#explore-welcome h2 { margin:0 0 18px; font-size:clamp(24px,5vw,32px); color:#e3c18b; }
+#explore-welcome p { font-size:17px; line-height:1.55; margin:12px 0; }
+#explore-welcome .welcome-secret { color:#d3b3e1; font-style:italic; }
+#explore-welcome button { margin-top:14px; padding:12px 22px; border:1px solid #d9ba86; border-radius:7px; background:#493052; color:#fff1d8; font:inherit; cursor:pointer; }
+#explore-welcome button:focus-visible { outline:3px solid #e3c18b; outline-offset:4px; }
+#cat-video-modal { position:fixed; inset:0; z-index:10035; display:none; align-items:center; justify-content:center; padding:clamp(12px,4vw,42px); box-sizing:border-box; background:rgba(5,3,8,.91); }
+#cat-video-modal.visible { display:flex; }
+#cat-video-frame { position:relative; width:min(960px,94vw); max-height:88vh; padding:clamp(8px,2vw,16px); border:2px solid #69527c; border-radius:10px; background:#170f20; box-shadow:0 18px 70px rgba(0,0,0,.85); }
+#cat-video-player { display:block; width:100%; max-height:calc(88vh - 32px); object-fit:contain; background:#000; }
+#cat-video-close { position:absolute; right:-12px; top:-16px; width:40px; height:40px; border:1px solid #e6d1f1; border-radius:50%; color:#fff; background:#382248; font:28px/1 sans-serif; cursor:pointer; z-index:1; }
+#cat-video-close:focus-visible { outline:3px solid #f2c98a; outline-offset:3px; }
+
+#quick-portfolio-link{position:fixed;left:18px;bottom:18px;z-index:50;padding:10px 15px;border:1px solid #b898c9;border-radius:6px;background:rgba(25,14,32,.94);color:#f8ead5;font:14px/1.4 Georgia,serif;text-decoration:none;max-width:calc(100vw - 110px);box-sizing:border-box}#quick-portfolio-link:focus-visible{outline:3px solid #f2c98a;outline-offset:3px}@media(max-width:600px){#quick-portfolio-link{left:12px;bottom:18px;font-size:12px;padding:9px 12px}}
+</style>
+
+<div id="wrap">
+<a id="quick-portfolio-link" href="portfolio-editorial.html">Ver trabajos · acceso directo ↗</a>
+
+  <canvas id="c"></canvas>
+  <button id="music-toggle" type="button" aria-label="Activar música de ambiente" aria-pressed="false">♫ Música: OFF</button>
+  <audio id="exterior-music" src="https://res.cloudinary.com/dslosjjeb/video/upload/v1793180937/scary-house_tqhmhj.mp3" preload="none" loop></audio>
+
+  <header id="portfolio-signature" aria-label="Portfolio de Beatriz Bustamante"><img src="./img/fachada/rotulo-portfolio.png" alt="PORTFOLIO — Beatriz Bustamante" draggable="false"></header>
+  <a id="pig-story-link" href="./cuento-interactivo/index.html" target="_blank" rel="noopener noreferrer" aria-label="Abrir el Cuento interactivo del Cementerio Sostenible en una ventana nueva" title="Cuento del Cementerio Sostenible — abrir en una ventana nueva"></a>
+  <div id="hint">Haz clic en la fachada para ver las habitaciones</div>
+  <div id="interior-controls">WASD / Flechas = caminar · Esc = volver a la casa</div>
+  <div id="room-loading">Entrando...</div>
+  <div id="mirror-report-modal" role="dialog" aria-modal="true" aria-label="Informe sobre mí">
+    <button id="mirror-report-close" type="button" aria-label="Cerrar informe">×</button>
+    <img src="./img/INFORME-SOBRE-MÍ.webp" alt="Informe sobre mí" />
+  </div>
+  <div id="salon-video-modal" role="dialog" aria-modal="true" aria-label="Vídeo de la estantería del Salón" aria-hidden="true">
+    <div id="salon-video-frame">
+      <button id="salon-video-close" type="button" aria-label="Cerrar vídeo">×</button>
+      <video id="salon-video-player" controls playsinline preload="none">
+        <source src="https://res.cloudinary.com/dslosjjeb/video/upload/v1793179035/CORREO_ELECTR%C3%93NICO_d3cjku.mp4" type="video/mp4" />
+        Tu navegador no admite la reproducción de vídeo HTML5.
+      </video>
+    </div>
+  </div>
+  <div id="salon-painting-video-modal" role="dialog" aria-modal="true" aria-label="Vídeo del cuadro del Salón" aria-hidden="true">
+    <div id="salon-painting-video-frame">
+      <button id="salon-painting-video-close" type="button" aria-label="Cerrar vídeo del cuadro">×</button>
+      <video id="salon-painting-video-player" controls playsinline preload="none">
+        <source src="https://res.cloudinary.com/dslosjjeb/video/upload/v1793179073/MUJER_ANDANDO_MUSIC_ybeu7b.mp4" type="video/mp4" />
+        Tu navegador no admite la reproducción de vídeo HTML5.
+      </video>
+    </div>
+  </div>
+  
+  <div id="pig-video-modal" role="dialog" aria-modal="true" aria-label="Vídeo Pig Fiction" aria-hidden="true">
+    <div id="pig-video-frame">
+      <button id="pig-video-close" type="button" aria-label="Cerrar vídeo Pig Fiction">×</button>
+      <video id="pig-video-player" controls playsinline preload="none">
+        <source src="https://res.cloudinary.com/dslosjjeb/video/upload/v1793179368/Pig-Fiction-Music_roupxn.mp4" type="video/mp4" />
+        Tu navegador no admite la reproducción de vídeo HTML5.
+      </video>
+    </div>
+  </div>
+  <div id="cat-video-modal" role="dialog" aria-modal="true" aria-label="Vídeo del retrato del gato" aria-hidden="true">
+    <div id="cat-video-frame">
+      <button id="cat-video-close" type="button" aria-label="Cerrar vídeo del retrato del gato">×</button>
+      <video id="cat-video-player" controls playsinline preload="none">
+        <source src="https://res.cloudinary.com/dslosjjeb/video/upload/v1793186994/HUEVO_HIND%C3%9A_M%C3%9ASICA_toxmvs.mp4" type="video/mp4" />
+        Tu navegador no admite la reproducción de vídeo HTML5.
+      </video>
+    </div>
+  </div>
+  <div id="tartalo-video-modal" role="dialog" aria-modal="true" aria-label="Vídeo Tártalo" aria-hidden="true">
+    <div id="tartalo-video-frame">
+      <button id="tartalo-video-close" type="button" aria-label="Cerrar vídeo Tártalo">×</button>
+      <video id="tartalo-video-player" controls playsinline preload="none">
+        <source src="https://res.cloudinary.com/dslosjjeb/video/upload/v1793180605/TartaloMusic_jxqkvl.mp4" type="video/mp4" />
+        Tu navegador no admite la reproducción de vídeo HTML5.
+      </video>
+    </div>
+  </div>
+  <div id="ghost-video-modal" role="dialog" aria-modal="true" aria-label="Vídeo Fantasmita Escalera" aria-hidden="true">
+    <div id="ghost-video-frame"><button id="ghost-video-close" type="button" aria-label="Cerrar vídeo">×</button>
+      <video id="ghost-video-player" controls playsinline preload="none"><source src="https://res.cloudinary.com/dslosjjeb/video/upload/v1793179486/FantasmitaEscaleraMUSIC_klirt1.mp4" type="video/mp4" /></video>
+    </div>
+  </div>
+  <div id="personajes-modal" role="dialog" aria-modal="true" aria-label="Desarrollo de personajes: Sibille y Poewee" aria-hidden="true">
+  <div id="personajes-frame">
+    <button id="personajes-close" type="button" aria-label="Cerrar desarrollo de personajes">×</button>
+    <div id="personajes-viewer" aria-label="Cinco páginas del desarrollo de personajes" oncontextmenu="return false">
+<img src="./img/cocina/desarrollo-personajes-01.webp" alt="Desarrollo de personajes Sibille y Poewee, página 1 de 5" draggable="false" loading="lazy"><img src="./img/cocina/desarrollo-personajes-02.webp" alt="Desarrollo de personajes Sibille y Poewee, página 2 de 5" draggable="false" loading="lazy"><img src="./img/cocina/desarrollo-personajes-03.webp" alt="Desarrollo de personajes Sibille y Poewee, página 3 de 5" draggable="false" loading="lazy"><img src="./img/cocina/desarrollo-personajes-04.webp" alt="Desarrollo de personajes Sibille y Poewee, página 4 de 5" draggable="false" loading="lazy"><img src="./img/cocina/desarrollo-personajes-05.webp" alt="Desarrollo de personajes Sibille y Poewee, página 5 de 5" draggable="false" loading="lazy">
+    </div>
+  </div>
+</div>
+<div id="abismo-modal" role="dialog" aria-modal="true" aria-label="Cómic Abismo" aria-hidden="true">
+<div id="abismo-frame"><button id="abismo-close" type="button" aria-label="Cerrar cómic Abismo">×</button>
+<div id="abismo-viewer" aria-label="Páginas del cómic Abismo" oncontextmenu="return false"><img src="./img/dormitorio/abismo-pagina-01.webp" alt="Abismo, página 1 de 7" draggable="false" loading="lazy"><img src="./img/dormitorio/abismo-pagina-02.webp" alt="Abismo, página 2 de 7" draggable="false" loading="lazy"><img src="./img/dormitorio/abismo-pagina-03.webp" alt="Abismo, página 3 de 7" draggable="false" loading="lazy"><img src="./img/dormitorio/abismo-pagina-04.webp" alt="Abismo, página 4 de 7" draggable="false" loading="lazy"><img src="./img/dormitorio/abismo-pagina-05.webp" alt="Abismo, página 5 de 7" draggable="false" loading="lazy"><img src="./img/dormitorio/abismo-pagina-06.webp" alt="Abismo, página 6 de 7" draggable="false" loading="lazy"><img src="./img/dormitorio/abismo-pagina-07.webp" alt="Abismo, página 7 de 7" draggable="false" loading="lazy"></div></div></div>
+<div id="rapunzel-pdf-modal" role="dialog" aria-modal="true" aria-label="Proyecto Rapunzel" aria-hidden="true">
+    <div id="rapunzel-pdf-frame">
+      <button id="rapunzel-pdf-close" type="button" aria-label="Cerrar proyecto Rapunzel">×</button>
+      <div id="rapunzel-pdf-viewer" aria-label="Páginas del proyecto Rapunzel" oncontextmenu="return false"><img src="./img/estudio/rapunzel-pagina-01.webp" alt="Rapunzel, página 1 de 5" draggable="false" loading="lazy"><img src="./img/estudio/rapunzel-pagina-02.webp" alt="Rapunzel, página 2 de 5" draggable="false" loading="lazy"><img src="./img/estudio/rapunzel-pagina-03.webp" alt="Rapunzel, página 3 de 5" draggable="false" loading="lazy"><img src="./img/estudio/rapunzel-pagina-04.webp" alt="Rapunzel, página 4 de 5" draggable="false" loading="lazy"><img src="./img/estudio/rapunzel-pagina-05.webp" alt="Rapunzel, página 5 de 5" draggable="false" loading="lazy"></div>
+    </div>
+  </div>
+  <button id="facade-btn" type="button">Volver a poner fachada</button>
+  <div id="room-panel">
+    <div id="room-label"></div>
+    <div id="room-desc"></div>
+    <button id="exit-btn">↩ Volver a la casa</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const canvas = document.getElementById('c');
+  const portfolioSignature = document.getElementById('portfolio-signature');
+  const pigStoryLink = document.getElementById('pig-story-link');
+  pigStoryLink.addEventListener('pointerdown', e => e.stopPropagation());
+  function openCemeteryStory() {
+    window.open(new URL('cuento-interactivo/index.html', document.baseURI).href,
+      '_blank', 'popup=yes,noopener,noreferrer,width=1200,height=850');
+  }
+  pigStoryLink.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    openCemeteryStory();
+  });
+  const hintEl = document.getElementById('hint');
+  const panelEl = document.getElementById('room-panel');
+  const interiorControlsEl = document.getElementById('interior-controls');
+  const loadingEl = document.getElementById('room-loading');
+  const labelEl = document.getElementById('room-label');
+  const descEl = document.getElementById('room-desc');
+  const exitBtn = document.getElementById('exit-btn');
+  const facadeBtn = document.getElementById('facade-btn');
+
+  // Formato de referencia de la escena. Se conserva aunque la ventana
+  // sea ultrapanorámica, vertical o cambie al entrar/salir de pantalla completa.
+  // Así la geometría 3D nunca se estira para rellenar un formato distinto.
+  const DESIGN_ASPECT = 16 / 9;
+
+  const w = window.innerWidth || canvas.clientWidth || 1280;
+  const h = window.innerHeight || canvas.clientHeight || 720;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.setSize(w, h, false);
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(68, DESIGN_ASPECT, 0.05, 100);
+  const interiorGroup = new THREE.Group();
+  scene.add(interiorGroup);
+
+  // Suelo proporcionado por el usuario.
+  const floorTexture = new THREE.TextureLoader().load(
+    './img/general/suelo-interior.webp',
+    () => console.log('Suelo cargado correctamente'),
+    undefined,
+    (err) => console.error('Error cargando el suelo:', err)
+  );
+  floorTexture.wrapS = THREE.RepeatWrapping;
+  floorTexture.wrapT = THREE.RepeatWrapping;
+  floorTexture.repeat.set(3, 8);
+  floorTexture.colorSpace = THREE.SRGBColorSpace;
+
+  const interiorFloorMat = new THREE.MeshLambertMaterial({
+    map: floorTexture,
+    side: THREE.DoubleSide
+  });
+  // Sofá gótico proporcionado por el usuario, para El Salón.
+  // Papel pintado gótico del salón. Solo se aplica a las paredes interiores
+  // de la habitación que contiene el sofá.
+  const salonWallpaperTexture = new THREE.TextureLoader().load('./img/salon/papel-pintado-gotico-salon.webp');
+  salonWallpaperTexture.colorSpace = THREE.SRGBColorSpace;
+  salonWallpaperTexture.wrapS = THREE.RepeatWrapping;
+  salonWallpaperTexture.wrapT = THREE.RepeatWrapping;
+  salonWallpaperTexture.repeat.set(2.0, 1.5);
+  salonWallpaperTexture.anisotropy = 4;
+  const salonWallpaperMat = new THREE.MeshLambertMaterial({
+    map: salonWallpaperTexture,
+    color: 0xffffff,
+    side: THREE.DoubleSide,
+    emissive: 0x000000,
+    emissiveIntensity: 0.0
+  });
+
+  // Papel pintado morado claro para la habitación situada encima del salón (Dormitorio).
+  const upstairsWallpaperTexture = new THREE.TextureLoader().load('./img/dormitorio/papel-pintado-morado-dormitorio.webp');
+  upstairsWallpaperTexture.colorSpace = THREE.SRGBColorSpace;
+  upstairsWallpaperTexture.wrapS = THREE.RepeatWrapping;
+  upstairsWallpaperTexture.wrapT = THREE.RepeatWrapping;
+  upstairsWallpaperTexture.repeat.set(2.0, 1.5);
+  upstairsWallpaperTexture.anisotropy = 4;
+  const upstairsWallpaperMat = new THREE.MeshLambertMaterial({
+    map: upstairsWallpaperTexture,
+    color: 0xffffff,
+    side: THREE.DoubleSide,
+    emissive: 0x24152f,
+    emissiveIntensity: 0.22
+  });
+
+  // Papel pintado rojo carmesí para la habitación restante (La Cocina).
+  // Reutiliza el mismo diseño gótico del papel amarillo del salón,
+  // con un tinte rojo cálido para mantener la estética de toda la casa.
+  const redRoomWallpaperTexture = salonWallpaperTexture;
+  const redRoomWallpaperMat = new THREE.MeshLambertMaterial({
+    map: redRoomWallpaperTexture,
+    color: 0xc44747,
+    side: THREE.DoubleSide,
+    emissive: 0x2a0f12,
+    emissiveIntensity: 0.32
+  });
+
+  // Papel pintado verde venenoso para El Estudio.
+  const studyWallpaperTexture = new THREE.TextureLoader().load('./img/estudio/papel-pintado-verde-estudio.webp');
+  studyWallpaperTexture.colorSpace = THREE.SRGBColorSpace;
+  studyWallpaperTexture.wrapS = THREE.RepeatWrapping;
+  studyWallpaperTexture.wrapT = THREE.RepeatWrapping;
+  studyWallpaperTexture.repeat.set(2.0, 1.5);
+  studyWallpaperTexture.anisotropy = 4;
+  const studyWallpaperMat = new THREE.MeshLambertMaterial({
+    map: studyWallpaperTexture,
+    color: 0xffffff,
+    side: THREE.DoubleSide,
+    emissive: 0x101500,
+    emissiveIntensity: 0.18
+  });
+
+  const sofaTexture = new THREE.TextureLoader().load('./img/salon/sofa-gotico.webp');
+  sofaTexture.colorSpace = THREE.SRGBColorSpace;
+  // Evita el halo blanco: sin blending por transparencia (que mezcla el
+  // borde con blanco) y sin mipmaps (que difuminan el borde del PNG
+  // contra su fondo blanco). Corte duro solo con alphaTest.
+  sofaTexture.premultiplyAlpha = true;
+  sofaTexture.generateMipmaps = false;
+  sofaTexture.minFilter = THREE.LinearFilter;
+  sofaTexture.magFilter = THREE.LinearFilter;
+  const sofaMat = new THREE.MeshBasicMaterial({
+    map: sofaTexture,
+    transparent: false,
+    alphaTest: 0.5,
+    side: THREE.DoubleSide,
+    depthWrite: true
+  });
+
+  // Mueble de cocina gótico (aparador + bancada), apoyado en la pared
+  // del fondo de La Cocina, ocupando todo el ancho de esa pared.
+  const kitchenMuebleTexture = new THREE.TextureLoader().load('./img/cocina/mueble-cocina-gotico.webp');
+  kitchenMuebleTexture.colorSpace = THREE.SRGBColorSpace;
+  kitchenMuebleTexture.premultiplyAlpha = true;
+  kitchenMuebleTexture.generateMipmaps = false;
+  kitchenMuebleTexture.minFilter = THREE.LinearFilter;
+  kitchenMuebleTexture.magFilter = THREE.LinearFilter;
+  const kitchenMuebleMat = new THREE.MeshBasicMaterial({
+    map: kitchenMuebleTexture,
+    transparent: false,
+    alphaTest: 0.5,
+    side: THREE.DoubleSide,
+    depthWrite: true,
+    depthTest: false
+  });
+
+  // Mueble central del primer plano de Cocina (imagen original suministrada).
+  const kitchenIslandTexture = new THREE.TextureLoader().load('./img/cocina/mueble-central-primer-plano.webp');
+  kitchenIslandTexture.colorSpace = THREE.SRGBColorSpace;
+  kitchenIslandTexture.anisotropy = 4;
+  const kitchenIslandMat = new THREE.MeshBasicMaterial({
+    map: kitchenIslandTexture,
+    transparent: true,
+    alphaTest: 0.035,
+    side: THREE.DoubleSide,
+    depthTest: false,
+    depthWrite: false
+  });
+
+  // Mobiliario de referencia para El Estudio (PNG con transparencia).
+  const studyFurnitureTexture = new THREE.TextureLoader().load('./img/estudio/mobiliario-estudio.webp');
+  studyFurnitureTexture.colorSpace = THREE.SRGBColorSpace;
+  studyFurnitureTexture.premultiplyAlpha = true;
+  studyFurnitureTexture.generateMipmaps = false;
+  studyFurnitureTexture.minFilter = THREE.LinearFilter;
+  studyFurnitureTexture.magFilter = THREE.LinearFilter;
+  const studyFurnitureMat = new THREE.MeshBasicMaterial({
+    map: studyFurnitureTexture,
+    transparent: true,
+    alphaTest: 0.02,
+    side: THREE.DoubleSide,
+    // El mobiliario debe quedar visible por encima de las texturas de
+    // las paredes laterales y del suelo, incluso en las zonas que se solapan.
+    depthTest: false,
+    depthWrite: false
+  });
+
+
+  // ─── SPRITES DEL PERSONAJE (SIBILLE) ──────────────────────
+  // Ilustraciones originales del usuario, sin recolorear ni redibujar.
+  // Las 4 poses de idle_down ya vienen recortadas con el mismo canvas
+  // y el mismo punto de anclaje (centro de los pies), así que el
+  // personaje no salta ni cambia de tamaño al cambiar de frame.
+  const IDLE_DOWN_0 = './img/personaje/reposo/idle-frontal-01.webp';
+  const IDLE_DOWN_1 = './img/personaje/reposo/idle-frontal-02.webp';
+  const IDLE_DOWN_2 = './img/personaje/reposo/idle-frontal-03.webp';
+  const IDLE_DOWN_3 = './img/personaje/reposo/idle-frontal-04.webp';
+
+  const characterTextureLoader = new THREE.TextureLoader();
+  function loadCharacterTexture(dataUri) {
+    const tex = characterTextureLoader.load(dataUri);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.generateMipmaps = false;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    return tex;
+  }
+
+  // Velocidades de animación configurables por separado (no afectan a
+  // player.speed, que es la velocidad de movimiento físico).
+  // Idle de pie: fotogramas 1→2→3→4 cada 2 s; el último permanece 3 s.
+  const IDLE_FRAME_DURATION = 2000; // ms entre los tres primeros fotogramas
+
+  // Secuencia especial del salón: los fotogramas RUBIK 001..007 se
+  // reproducen de uno en uno al llegar al sofá, sin deformar su proporción.
+  const RUBIK_SIT_SOURCE_ASPECT = 940 / 1672;
+const RUBIK_SIT_FRAMES = [
+  loadCharacterTexture('./img/personaje/salon-sentarse/sentar-sofa-01.webp'),
+  loadCharacterTexture('./img/personaje/salon-sentarse/sentar-sofa-02.webp'),
+  loadCharacterTexture('./img/personaje/salon-sentarse/sentar-sofa-03.webp'),
+  loadCharacterTexture('./img/personaje/salon-sentarse/sentar-sofa-02.webp'),
+  loadCharacterTexture('./img/personaje/salon-sentarse/sentar-sofa-03.webp'),
+  loadCharacterTexture('./img/personaje/salon-sentarse/sentar-sofa-06.webp'),
+  loadCharacterTexture('./img/personaje/salon-sentarse/sentar-sofa-01.webp')
+];
+const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
+
+  // Animación exclusiva de reposo de El Estudio: 4 movimientos en bucle.
+  const STUDY_IDLE_SOURCE_ASPECT = 394 / 798;
+
+
+  // Registro de animaciones: cada entrada puede tener un número distinto
+  // de frames. Las de caminar están preparadas pero vacías (null) hasta
+  // que se añadan las ilustraciones correspondientes.
+  // CICLO DE PASOS REAL: 8 fotogramas por dirección.
+  // ============================================================
+  // CICLOS REALES DE PASOS, SIN FONDO
+  // ============================================================
+  const WALK_FRAME_DURATION = 100;
+
+  const animations = {
+    // Animación exclusiva de reposo de La Cocina: las cuatro poses de la referencia, 2 s cada una.
+    kitchen_idle: {
+      frames: [
+        loadCharacterTexture('./img/personaje/cocina-reposo/cocina-idle-01.webp'),
+        loadCharacterTexture('./img/personaje/cocina-reposo/cocina-idle-02.webp'),
+        loadCharacterTexture('./img/personaje/cocina-reposo/cocina-idle-03.webp'),
+        loadCharacterTexture('./img/personaje/cocina-reposo/cocina-idle-04.webp'),
+      ],
+      frameDuration: 2000,
+      // Fotogramas 1 y 4: 2 s; fotogramas centrales 2 y 3: 1 s.
+      frameDurations: [2000, 1000, 1000, 2000],
+      loop: true
+    },
+
+    // Animación exclusiva de reposo de El Estudio (sustituye al reposo normal):
+    // movimiento 1 = 3 s, 2 = 1 s, 3 = 1 s, 4 = 3 s, y vuelta a empezar.
+    study_idle: {
+      frames: [
+        loadCharacterTexture('./img/personaje/estudio-dibujar/estudio-dibujar-01.webp'),
+        loadCharacterTexture('./img/personaje/estudio-dibujar/estudio-dibujar-02.webp'),
+        loadCharacterTexture('./img/personaje/estudio-dibujar/estudio-dibujar-03.webp'),
+        loadCharacterTexture('./img/personaje/estudio-dibujar/estudio-dibujar-04.webp'),
+      ],
+      frameDurations: [3000, 1000, 1000, 3000],
+      loop: true
+    },
+
+    idle_down: {
+      frames: [
+        loadCharacterTexture(IDLE_DOWN_0),
+        loadCharacterTexture(IDLE_DOWN_1),
+        loadCharacterTexture(IDLE_DOWN_2),
+        loadCharacterTexture(IDLE_DOWN_3)
+      ],
+      // Las cuatro poses duran 2 segundos cada una.
+      // Solo se aplica al idle de pie; el sofá conserva su propia secuencia.
+      frameDuration: IDLE_FRAME_DURATION,
+      frameDurations: [2000, 2000, 2000, 2000]
+    },
+
+    // Sentarse en el sofá: 001 dura 3 s, 002..006 1 s cada uno y 007 3 s.
+    // Después vuelve a 001 mientras nadie despierte a la muñeca.
+    sit_sofa: {
+      frames: RUBIK_SIT_FRAMES,
+      frameDurations: RUBIK_SIT_FRAME_DURATIONS,
+      frameDuration: 1000,
+      loop: true
+    },
+
+    // HACIA EL FONDO: se ve la ESPALDA.
+    walk_up: {
+      frames: [
+        loadCharacterTexture('./img/personaje/caminar/espalda/caminar-espalda-01.webp'),
+        loadCharacterTexture('./img/personaje/caminar/espalda/caminar-espalda-02.webp'),
+        loadCharacterTexture('./img/personaje/caminar/espalda/caminar-espalda-03.webp'),
+        loadCharacterTexture('./img/personaje/caminar/espalda/caminar-espalda-04.webp'),
+        loadCharacterTexture('./img/personaje/caminar/espalda/caminar-espalda-05.webp'),
+        loadCharacterTexture('./img/personaje/caminar/espalda/caminar-espalda-06.webp'),
+        loadCharacterTexture('./img/personaje/caminar/espalda/caminar-espalda-07.webp'),
+        loadCharacterTexture('./img/personaje/caminar/espalda/caminar-espalda-08.webp'),
+      ],
+      frameDuration: WALK_FRAME_DURATION
+    },
+
+    // HACIA DELANTE / HACIA LA CÁMARA: se ve la CARA.
+    walk_down: {
+      frames: [
+        loadCharacterTexture('./img/personaje/caminar/frontal/caminar-frontal-01.webp'),
+        loadCharacterTexture('./img/personaje/caminar/frontal/caminar-frontal-02.webp'),
+        loadCharacterTexture('./img/personaje/caminar/frontal/caminar-frontal-03.webp'),
+        loadCharacterTexture('./img/personaje/caminar/frontal/caminar-frontal-04.webp'),
+        loadCharacterTexture('./img/personaje/caminar/frontal/caminar-frontal-05.webp'),
+        loadCharacterTexture('./img/personaje/caminar/frontal/caminar-frontal-06.webp'),
+        loadCharacterTexture('./img/personaje/caminar/frontal/caminar-frontal-07.webp'),
+        loadCharacterTexture('./img/personaje/caminar/frontal/caminar-frontal-08.webp')
+      ],
+      frameDuration: WALK_FRAME_DURATION
+    },
+
+    // PERFIL IZQUIERDO.
+    walk_left: {
+      frames: [
+        loadCharacterTexture('./img/personaje/caminar/perfil-izquierdo/caminar-izquierda-01.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-izquierdo/caminar-izquierda-02.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-izquierdo/caminar-izquierda-03.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-izquierdo/caminar-izquierda-04.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-izquierdo/caminar-izquierda-05.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-izquierdo/caminar-izquierda-06.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-izquierdo/caminar-izquierda-07.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-izquierdo/caminar-izquierda-08.webp'),
+      ],
+      frameDuration: WALK_FRAME_DURATION
+    },
+
+    // PERFIL DERECHO.
+    walk_right: {
+      frames: [
+        loadCharacterTexture('./img/personaje/caminar/perfil-derecho/caminar-derecha-01.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-derecho/caminar-derecha-02.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-derecho/caminar-derecha-03.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-derecho/caminar-derecha-04.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-derecho/caminar-derecha-05.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-derecho/caminar-derecha-06.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-derecho/caminar-derecha-07.webp'),
+        loadCharacterTexture('./img/personaje/caminar/perfil-derecho/caminar-derecha-08.webp'),
+      ],
+      frameDuration: WALK_FRAME_DURATION
+    }
+  };
+
+  // Altura real del personaje en el mundo 3D (metros aprox.). El ancho se
+  // deriva de la proporción real de la ilustración para no deformarla.
+  const CHARACTER_HEIGHT = 3.6; // el doble que antes (1.8 → 3.6), a petición del usuario
+  const SPRITE_SOURCE_ASPECT = 320 / 798; // ancho/alto del recorte ya normalizado
+  const CHARACTER_WIDTH = CHARACTER_HEIGHT * SPRITE_SOURCE_ASPECT;
+
+
+  // GIRO 2D QUE SIMULA UN GIRO 3D.
+  // Los 11 fotogramas recorren: frente -> perfil -> espalda -> perfil -> frente.
+  // Se usan únicamente al cambiar de dirección.
+  const TURN_FRAME_DURATION = 80;
+  const turnAnimations = {
+    frames: [
+        loadCharacterTexture('./img/personaje/giro/giro-direccion-01.webp'),
+        loadCharacterTexture('./img/personaje/giro/giro-direccion-02.webp'),
+        loadCharacterTexture('./img/personaje/giro/giro-direccion-03.webp'),
+        loadCharacterTexture('./img/personaje/giro/giro-direccion-04.webp'),
+        loadCharacterTexture('./img/personaje/giro/giro-direccion-05.webp'),
+        loadCharacterTexture('./img/personaje/giro/giro-direccion-06.webp'),
+        loadCharacterTexture('./img/personaje/giro/giro-direccion-07.webp'),
+        loadCharacterTexture('./img/personaje/giro/giro-direccion-08.webp'),
+        loadCharacterTexture('./img/personaje/giro/giro-direccion-09.webp'),
+        loadCharacterTexture('./img/personaje/giro/giro-direccion-10.webp'),
+        loadCharacterTexture('./img/personaje/giro/giro-direccion-01.webp')
+    ],
+    frameDuration: TURN_FRAME_DURATION
+  };
+
+  // Índice aproximado de cada orientación dentro de la vuelta completa.
+  // 001/011 = frente, 004 = perfil izq. hacia atrás, 006 = espalda,
+  // 008 = perfil der. hacia atrás.
+  const TURN_INDEX = {
+    down: 0,  // frente
+    left: 3,
+    up: 5,    // espalda
+    right: 8
+  };
+
+  let facingDirection = 'down';
+  let turnState = null;
+
+  const characterMat = new THREE.SpriteMaterial({
+    map: animations.idle_down.frames[0],
+    transparent: true,
+    alphaTest: 0.3,
+    depthWrite: true
+  });
+  const characterSprite = new THREE.Sprite(characterMat);
+  // Mantiene al personaje por delante del mobiliario superpuesto.
+  characterSprite.renderOrder = 4;
+  characterSprite.scale.set(CHARACTER_WIDTH, CHARACTER_HEIGHT, 1);
+  characterSprite.visible = false;
+  scene.add(characterSprite);
+
+  // Estado de reproducción de la animación activa (independiente de la
+  // posición del personaje: cambiar de frame nunca toca player.x/z).
+  const anim = { key: null, frameIndex: 0, timer: 0, frozen: false };
+
+  function pickAnimationKey() {
+    // Mientras gira, nunca se mezcla un fotograma de caminar con el giro.
+    if (turnState) return 'turn';
+    if (player.state === 'sitting') return 'sit_sofa';
+    // En la cocina, al quedarse quieta, usa las cuatro poses de la referencia.
+    if (activeRoom && activeRoom.id === 'pb-der' && player.state !== 'walking') return 'kitchen_idle';
+    // En El Estudio, al quedarse quieta, usa los cuatro movimientos en bucle.
+    if (activeRoom && activeRoom.id === 'p1-der' && player.state !== 'walking') return 'study_idle';
+    if (player.state !== 'walking') return 'idle_down';
+
+    // up    = z negativo = hacia el fondo = ESPALDA
+    // down  = z positivo = hacia delante/cámara = FRENTE
+    return 'walk_' + player.direction;
+  }
+
+  function applyAnimFrame() {
+    if (anim.key === 'turn') {
+      characterMat.map = turnAnimations.frames[anim.frameIndex];
+      characterSprite.scale.set(CHARACTER_WIDTH, CHARACTER_HEIGHT, 1);
+      characterMat.needsUpdate = true;
+      return;
+    }
+
+    const clip = animations[anim.key];
+    if (!clip || !clip.frames.length) return;
+    characterMat.map = clip.frames[anim.frameIndex];
+
+    // Los fotogramas RUBIK tienen una proporción distinta a los sprites
+    // originales. Ajustamos SOLO el ancho del sprite para que no se estiren.
+    if (anim.key === 'sit_sofa') {
+      characterSprite.scale.set(
+        CHARACTER_HEIGHT * RUBIK_SIT_SOURCE_ASPECT,
+        CHARACTER_HEIGHT,
+        1
+      );
+    } else if (anim.key === 'study_idle') {
+      characterSprite.scale.set(
+        CHARACTER_HEIGHT * STUDY_IDLE_SOURCE_ASPECT,
+        CHARACTER_HEIGHT,
+        1
+      );
+    } else {
+      characterSprite.scale.set(CHARACTER_WIDTH, CHARACTER_HEIGHT, 1);
+    }
+
+    characterMat.needsUpdate = true;
+  }
+
+  function beginTurn(toDirection) {
+    if (!toDirection || toDirection === facingDirection) return;
+
+    const start = turnState ? turnState.index : TURN_INDEX[facingDirection];
+    const target = TURN_INDEX[toDirection];
+
+    // La secuencia 0..10 representa una vuelta completa; 10 vuelve a ser frente.
+    let forward = (target - start + 11) % 11;
+    let step = forward <= 5 ? 1 : -1;
+
+    turnState = {
+      index: start,
+      target,
+      step,
+      timer: 0
+    };
+
+    anim.key = 'turn';
+    anim.frameIndex = start;
+    anim.timer = 0;
+    anim.frozen = false;
+    applyAnimFrame();
+  }
+
+  function updateCharacterAnimation(dt) {
+    const key = pickAnimationKey();
+
+    // Giro: avanzar por la secuencia de orientación hasta llegar a la dirección pedida.
+    if (turnState) {
+      turnState.timer += dt;
+
+      while (turnState.timer >= TURN_FRAME_DURATION && turnState) {
+        turnState.timer -= TURN_FRAME_DURATION;
+        const next = turnState.index + turnState.step;
+
+        turnState.index = (next + 11) % 11;
+        anim.key = 'turn';
+        anim.frameIndex = turnState.index;
+        applyAnimFrame();
+
+        if (turnState.index === turnState.target) {
+          facingDirection = player.direction;
+          turnState = null;
+          anim.key = null;
+          anim.frameIndex = 0;
+          anim.timer = 0;
+          applyAnimFrame();
+        }
+      }
+      return;
+    }
+
+    if (key !== anim.key) {
+      anim.key = key;
+      anim.frameIndex = 0;
+      anim.timer = 0;
+      anim.frozen = false;
+      applyAnimFrame();
+      return;
+    }
+
+    const clip = animations[key];
+    if (!clip) return;
+
+    // La secuencia del sofá tiene una duración distinta para cada fotograma.
+    if (key === 'sit_sofa') {
+      anim.timer += dt;
+      while (anim.timer >= clip.frameDurations[anim.frameIndex]) {
+        anim.timer -= clip.frameDurations[anim.frameIndex];
+
+        if (anim.frameIndex < clip.frames.length - 1) {
+          anim.frameIndex++;
+        } else {
+          // Último fotograma (007) permanece 3 s y después el ciclo vuelve a 001.
+          anim.frameIndex = 0;
+        }
+        applyAnimFrame();
+      }
+      return;
+    }
+
+    if (player.state === 'walking') {
+      anim.timer += dt;
+      while (anim.timer >= clip.frameDuration) {
+        anim.timer -= clip.frameDuration;
+        anim.frameIndex = (anim.frameIndex + 1) % clip.frames.length;
+        applyAnimFrame();
+      }
+    } else if (key === 'idle_down' || key === 'kitchen_idle' || key === 'study_idle') {
+      // Bucle automático cuando la muñeca está de pie y nadie interactúa.
+      // Cada fotograma permanece el tiempo definido en frameDurations.
+      const durations = clip.frameDurations || [];
+      anim.timer += dt;
+      while (durations.length && anim.timer >= durations[anim.frameIndex]) {
+        anim.timer -= durations[anim.frameIndex];
+        anim.frameIndex = (anim.frameIndex + 1) % clip.frames.length;
+        applyAnimFrame();
+      }
+    } else {
+      anim.frameIndex = 0;
+      anim.timer = 0;
+      anim.frozen = true;
+      applyAnimFrame();
+    }
+  }
+
+  function updateCharacterSprite() {
+    // Ancla en el centro de los pies: el sprite está centrado por
+    // defecto, así que se sube medio alto para que la base coincida
+    // con player.y (el suelo bajo los pies).
+    characterSprite.visible = (mode === 'interior' && player.state !== 'sleeping');
+    characterSprite.position.set(player.x, player.y + CHARACTER_HEIGHT / 2, player.z);
+  }
+
+  const interiorWallMat = new THREE.MeshLambertMaterial({
+    color: 0x6e5960,
+    side: THREE.DoubleSide
+  });
+  const interiorCeilingMat = new THREE.MeshLambertMaterial({
+    color: 0x241b29,
+    side: THREE.DoubleSide
+  });
+
+  // Estructura visible al retirar la fachada: gris oscuro, nunca blanca.
+  const wallMat = new THREE.MeshLambertMaterial({ color: 0x3a3740, side: THREE.DoubleSide });
+  const darkMat = new THREE.MeshLambertMaterial({ color: 0x808080, side: THREE.DoubleSide });
+  const roofMat = new THREE.MeshLambertMaterial({ color: 0x909090 });
+  const floorMat = new THREE.MeshLambertMaterial({ map: floorTexture, side: THREE.DoubleSide });
+  const frameMat = new THREE.MeshLambertMaterial({ color: 0x606060 });
+  const chimneyMat = new THREE.MeshLambertMaterial({ color: 0x888888 });
+
+  function box(bw, bh, bd, mat, x, y, z) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), mat);
+    m.position.set(x, y, z);
+    m.castShadow = true; m.receiveShadow = true;
+    exteriorGroup.add(m); return m;
+  }
+
+  const exteriorGroup = new THREE.Group();
+  scene.add(exteriorGroup);
+
+  const HW = 7.0, HH = 5.0, HD = 3.2;
+
+  // Paredes y suelos
+  // Al retirar la fachada, la pared trasera visible reproduce el color base
+  // de cada habitación, en lugar del gris neutro de la estructura.
+  const salonExteriorMat = new THREE.MeshLambertMaterial({ color: 0x030205, side: THREE.DoubleSide });
+  const cocinaExteriorMat = new THREE.MeshLambertMaterial({ color: 0x030205, side: THREE.DoubleSide });
+  const dormitorioExteriorMat = new THREE.MeshLambertMaterial({ color: 0x030205, side: THREE.DoubleSide });
+  const estudioExteriorMat = new THREE.MeshLambertMaterial({ color: 0x030205, side: THREE.DoubleSide });
+
+  const roomPanelW = HW / 2 - 0.06;
+  const roomPanelH = HH / 2 - 0.06;
+  const frontWallZ = -HD/2;
+  box(roomPanelW, roomPanelH, 0.15, salonExteriorMat, -HW/4, HH/4, frontWallZ);
+  box(roomPanelW, roomPanelH, 0.15, cocinaExteriorMat,  HW/4, HH/4, frontWallZ);
+  box(roomPanelW, roomPanelH, 0.15, dormitorioExteriorMat, -HW/4, 3*HH/4, frontWallZ);
+  box(roomPanelW, roomPanelH, 0.15, estudioExteriorMat,  HW/4, 3*HH/4, frontWallZ);
+  box(0.15, HH, HD, wallMat, -HW/2, 2.5, 0);
+  box(0.15, HH, HD, wallMat, HW/2, 2.5, 0);
+  box(HW, 0.12, HD, floorMat, 0, 0, 0);
+  box(HW, 0.12, HD, floorMat, 0, HH/2, 0);
+  box(HW, 0.12, HD, floorMat, 0, HH, 0);
+  box(0.12, HH, HD, darkMat, 0, 2.5, 0);
+
+  // ─── TECHO PLANO ──────────────────────────────────────────
+  const roofW = HW + 0.6, roofDepth = HD + 0.4;
+  box(roofW, 0.25, roofDepth, roofMat, 0, HH + 0.12, 0);
+
+  box(roofW + 0.2, 0.15, 0.15, frameMat, 0, HH + 0.27, roofDepth/2 + 0.07);
+  box(roofW + 0.2, 0.15, 0.15, frameMat, 0, HH + 0.27, -roofDepth/2 - 0.07);
+  box(0.15, 0.15, roofDepth + 0.2, frameMat, -roofW/2 - 0.07, HH + 0.27, 0);
+  box(0.15, 0.15, roofDepth + 0.2, frameMat,  roofW/2 + 0.07, HH + 0.27, 0);
+
+  // ─── FRONTÓN TRIANGULAR ───────────────────────────────────
+  const pedHeight = 2.5;
+  const pedW = HW * 0.72;
+
+  const pedShape = new THREE.Shape();
+  pedShape.moveTo(-pedW/2, 0);
+  pedShape.lineTo(0, pedHeight);
+  pedShape.lineTo(pedW/2, 0);
+  pedShape.closePath();
+  const pedGeo = new THREE.ShapeGeometry(pedShape);
+
+  const pedFront = new THREE.Mesh(pedGeo, wallMat);
+  pedFront.position.set(0, HH + 0.35, roofDepth/2 + 0.08);
+  exteriorGroup.add(pedFront);
+
+  const pedBack = new THREE.Mesh(pedGeo, wallMat);
+  pedBack.position.set(0, HH + 0.35, roofDepth/2 + 0.01);
+  pedBack.rotation.y = Math.PI;
+  exteriorGroup.add(pedBack);
+
+  const lPed = new THREE.Mesh(new THREE.BoxGeometry(pedW/2 + 0.1, 0.1, roofDepth*0.18), roofMat);
+  lPed.position.set(-pedW/4 + 0.05, HH + 0.35 + pedHeight/2, roofDepth/2 + 0.04);
+  lPed.rotation.z = Math.atan2(pedHeight, pedW/2);
+  exteriorGroup.add(lPed);
+
+  const rPed = new THREE.Mesh(new THREE.BoxGeometry(pedW/2 + 0.1, 0.1, roofDepth*0.18), roofMat);
+  rPed.position.set(pedW/4 - 0.05, HH + 0.35 + pedHeight/2, roofDepth/2 + 0.04);
+  rPed.rotation.z = -Math.atan2(pedHeight, pedW/2);
+  exteriorGroup.add(rPed);
+
+  const pedFrameL = new THREE.Mesh(new THREE.BoxGeometry(Math.sqrt(pedHeight*pedHeight + (pedW/2)*(pedW/2)) + 0.1, 0.12, 0.12), frameMat);
+  pedFrameL.position.set(-pedW/4, HH + 0.35 + pedHeight/2, roofDepth/2 + 0.09);
+  pedFrameL.rotation.z = Math.atan2(pedHeight, pedW/2);
+  exteriorGroup.add(pedFrameL);
+
+  const pedFrameR = new THREE.Mesh(new THREE.BoxGeometry(Math.sqrt(pedHeight*pedHeight + (pedW/2)*(pedW/2)) + 0.1, 0.12, 0.12), frameMat);
+  pedFrameR.position.set(pedW/4, HH + 0.35 + pedHeight/2, roofDepth/2 + 0.09);
+  pedFrameR.rotation.z = -Math.atan2(pedHeight, pedW/2);
+  exteriorGroup.add(pedFrameR);
+
+  box(pedW + 0.15, 0.12, 0.12, frameMat, 0, HH + 0.35, roofDepth/2 + 0.09);
+
+  // ─── FACHADA PNG SUPERPUESTA ──────────────────────────────
+  // La fachada es una capa frontal: no gira ni usa bisagras. Al hacer clic
+  // sobre ella desaparece por completo y deja accesibles las habitaciones.
+  const facadeTexture = new THREE.TextureLoader().load('./img/fachada/fachada-casa.webp');
+  facadeTexture.colorSpace = THREE.SRGBColorSpace;
+  facadeTexture.minFilter = THREE.LinearFilter;
+  facadeTexture.magFilter = THREE.LinearFilter;
+  facadeTexture.needsUpdate = true;
+
+  const FACADE_WIDTH = 8.45;
+  const FACADE_HEIGHT = 8.76;
+  const facadeMat = new THREE.MeshBasicMaterial({
+    map: facadeTexture,
+    transparent: true,
+    alphaTest: 0.04,
+    depthTest: false,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+  const facadeMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(FACADE_WIDTH, FACADE_HEIGHT),
+    facadeMat
+  );
+  facadeMesh.position.set(0, FACADE_HEIGHT / 2 - 0.08, roofDepth / 2 + 0.30);
+  facadeMesh.scale.set(1.12, 1.12, 1);
+  facadeMesh.renderOrder = 999;
+  facadeMesh.userData.isFacade = true;
+  exteriorGroup.add(facadeMesh);
+
+  // ─── CERDITO DE PELUCHE (delante de la fachada) ────────────
+  // Solo se ve cuando la fachada está puesta: se oculta y se
+  // muestra junto con ella desde setFacadeVisible().
+  const pigTexture = new THREE.TextureLoader().load('./img/fachada/cerdo-fachada.webp');
+  pigTexture.colorSpace = THREE.SRGBColorSpace;
+  const pigMat = new THREE.MeshBasicMaterial({
+    map: pigTexture,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+  const PIG_HEIGHT = 10.86;
+  const PIG_WIDTH = PIG_HEIGHT * (1487 / 1836); // proporción real de la nueva imagen del muñeco
+  const pigMesh = new THREE.Mesh(new THREE.PlaneGeometry(PIG_WIDTH, PIG_HEIGHT), pigMat);
+  // Cerdito grande a la izquierda de la casa: el culo/patas quedan apoyados
+  // en el suelo y el cuerpo se apoya visualmente en el lateral de la casa,
+  // sin quedar flotando ni tapar la fachada central.
+  pigMesh.position.set(-5.48, PIG_HEIGHT / 2 - 3.11, roofDepth / 2 + 3.54);
+  pigMesh.renderOrder = 1000;
+  exteriorGroup.add(pigMesh);
+
+  let facadeVisible = true;
+
+  function setFacadeVisible(visible) {
+    facadeVisible = visible;
+    portfolioSignature.hidden = !visible;
+    facadeMesh.visible = visible;
+    pigMesh.visible = visible;
+    darkRoomGroup.visible = !visible && mode === 'exterior';
+    facadeBtn.classList.toggle('visible', visible === false && mode === 'exterior');
+    if (visible) {
+      canvas.classList.remove('hoverable');
+      hitboxGroup.children.forEach(m => m.material.opacity = 0);
+    }
+  }
+
+  // Chimenea
+  box(0.6, 1.4, 0.6, chimneyMat, HW/2 - 0.9, HH + 0.5, 0);
+
+  // Luces
+  const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+  scene.add(ambient);
+  const dir = new THREE.DirectionalLight(0xaabbff, 1.0);
+  dir.position.set(3, 10, 8); dir.castShadow = true;
+  scene.add(dir);
+  const fill = new THREE.DirectionalLight(0x8899cc, 0.4);
+  fill.position.set(-5, 2, 4);
+  scene.add(fill);
+  const candle = new THREE.PointLight(0xffaa55, 0, 6, 2); // se enciende al entrar en una habitación
+  scene.add(candle);
+
+  // Luz lateral cálida para partir la sala en dos ambientes: la mitad
+  // hacia xMax queda iluminada por esta luz; la mitad hacia xMin se queda
+  // en penumbra porque, al entrar en una sala, atenuamos también la luz
+  // ambiental/direccional global (ver enterRoom/exitRoom más abajo).
+  const roomSideLight = new THREE.PointLight(0xffcf9c, 0, 7, 2);
+  scene.add(roomSideLight);
+
+  // Niveles de luz global: los "BASE" son los de la casa por fuera; los
+  // "INTERIOR" son más tenues, para que la luz lateral cree contraste real
+  // entre las dos mitades de la sala en vez de quedar todo plano y uniforme.
+  const AMBIENT_BASE = 0.6, AMBIENT_INTERIOR = 0.16;
+  const DIR_BASE = 1.0, DIR_INTERIOR = 0.22;
+  const FILL_BASE = 0.4, FILL_INTERIOR = 0.12;
+
+  // Ajuste de encuadre de la casa. La posición real de la geometría no cambia;
+  // el objetivo de la cámara exterior determina cuánto queda bajada en pantalla.
+  const PIVOT_Y = -2.5;
+
+  // ─── HABITACIONES CLICABLES ───────────────────────────────
+  const rooms = [
+    {
+      id: 'pb-izq', label: 'El Salón', desc: 'El sofá es bastante confortable para descansar un rato en paz.',
+      xMin: -HW/2, xMax: 0, yMin: 0, yMax: HH/2
+    },
+    {
+      id: 'pb-der', label: 'La Cocina', desc: 'Un olor a cera quemada flota entre los estantes vacíos.',
+      xMin: 0, xMax: HW/2, yMin: 0, yMax: HH/2
+    },
+    {
+      id: 'p1-izq', label: 'El Dormitorio', desc: 'El ataúd siempre es un buen lugar para descansar un rato.',
+      xMin: -HW/2, xMax: 0, yMin: HH/2, yMax: HH
+    },
+    {
+      id: 'p1-der', label: 'El Estudio', desc: 'Los libros en la estantería susurran si te acercas demasiado.',
+      xMin: 0, xMax: HW/2, yMin: HH/2, yMax: HH
+    },
+  ];
+
+  const hitboxGroup = new THREE.Group();
+  scene.add(hitboxGroup);
+
+  rooms.forEach(room => {
+    const width = room.xMax - room.xMin;
+    const height = room.yMax - room.yMin;
+    const depth = HD - 0.35;
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0xffa552, transparent: true, opacity: 0, depthWrite: false
+    });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), mat);
+    mesh.position.set(
+      (room.xMin + room.xMax) / 2,
+      (room.yMin + room.yMax) / 2,
+      0
+    );
+    mesh.userData.room = room;
+    hitboxGroup.add(mesh);
+    room.center = new THREE.Vector3(mesh.position.x, mesh.position.y, mesh.position.z);
+  });
+
+
+  // ─── OSCURIDAD Y PLACAS VICTORIANAS EN LA VISTA GENERAL ───
+  // Solo se superponen a la vista exterior sin fachada. No alteran
+  // materiales, hitboxes, sprites ni geometría de las habitaciones.
+  const darkRoomGroup = new THREE.Group();
+  exteriorGroup.add(darkRoomGroup);
+  const roomPlaques = {
+    'pb-izq': 'Contacto',
+    'pb-der': 'Bocetos y más',
+    'p1-izq': 'Sobre mí',
+    'p1-der': 'Trabajos'
+  };
+
+  function createVictorianPlaque(label) {
+    const c = document.createElement('canvas');
+    c.width = 1024; c.height = 256;
+    const ctx = c.getContext('2d');
+    // Placa oscura, borde violeta y detalles ornamentales discretos.
+    ctx.fillStyle = '#17101f';
+    ctx.strokeStyle = '#b9a0d4';
+    ctx.lineWidth = 7;
+    ctx.beginPath(); ctx.roundRect(14, 15, 996, 226, 32); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#6c507f'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.roundRect(31, 31, 962, 194, 22); ctx.stroke();
+    ctx.fillStyle = '#d5bbef';
+    for (const x of [67, 957]) {
+      ctx.beginPath(); ctx.moveTo(x, 128); ctx.lineTo(x + 13, 115);
+      ctx.lineTo(x + 26, 128); ctx.lineTo(x + 13, 141); ctx.closePath(); ctx.fill();
+    }
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold 76px Georgia, serif';
+    ctx.fillStyle = '#f3eafa';
+    ctx.fillText(label, 512, 131, 805);
+    const texture = new THREE.CanvasTexture(c);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return texture;
+  }
+
+  rooms.forEach(room => {
+    const w = room.xMax - room.xMin;
+    const h = room.yMax - room.yMin;
+    // Panel negro delante del interior coloreado, dentro del marco original.
+    const darkness = new THREE.Mesh(
+      new THREE.PlaneGeometry(w - 0.16, h - 0.16),
+      new THREE.MeshBasicMaterial({color: 0x030205, side: THREE.DoubleSide, depthWrite: false})
+    );
+    darkness.position.set(room.center.x, room.center.y, HD / 2 + 0.10);
+    darkness.renderOrder = 20;
+    darkness.raycast = () => {}; // No bloquea los clics en las habitaciones.
+    darkRoomGroup.add(darkness);
+
+    const plaque = new THREE.Mesh(
+      new THREE.PlaneGeometry(Math.min(w - 0.36, 2.95), 0.69),
+      new THREE.MeshBasicMaterial({
+        map: createVictorianPlaque(roomPlaques[room.id]),
+        transparent: true, depthWrite: false, side: THREE.DoubleSide
+      })
+    );
+    plaque.position.set(room.center.x, room.center.y, HD / 2 + 0.13);
+    plaque.renderOrder = 21;
+    plaque.raycast = () => {};
+    darkRoomGroup.add(plaque);
+  });
+  darkRoomGroup.visible = false;
+
+  // Fondo ilustrado proporcionado por el usuario para la pantalla principal.
+  const bgTexture = new THREE.TextureLoader().load('FONDO.png');
+  bgTexture.colorSpace = THREE.SRGBColorSpace;
+  const bgMat = new THREE.MeshBasicMaterial({
+    map: bgTexture,
+    depthWrite: false,
+    depthTest: false
+  });
+  const bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(48, 27), bgMat);
+  bgPlane.position.set(0, 6, -10);
+  bgPlane.renderOrder = -100;
+  scene.add(bgPlane);
+
+  // ─── EXTERIOR / INTERIOR NAVEGABLE ─────────────────────────
+  const EXT_TARGET = new THREE.Vector3(0, 0.9, 0);
+  const view = { target: EXT_TARGET.clone(), radius: 17, theta: 0, phi: 1.43 };
+  let userTheta = 0, userPhi = 1.43, userRadius = 17;
+  let idlePhase = 0;
+
+  let mode = 'exterior'; // exterior | interior | transition
+  let activeRoom = null;
+  let transition = null;
+
+  // Posición del personaje dentro de la habitación. "y" es la altura de
+  // los pies (suelo de la sala), no la altura de los ojos: ya no hay
+  // cámara en primera persona, así que no necesitamos esa referencia.
+  // state/direction son la máquina de estados de animación: independientes
+  // de la posición física (mover al personaje nunca cambia su sprite,
+  // y cambiar de frame nunca cambia player.x/z).
+  const player = {
+    x: 0, y: 0, z: 0,
+    state: 'idle',       // 'idle' | 'walking' | 'sitting' | 'sleeping'
+    direction: 'down',   // 'up' | 'down' | 'left' | 'right' — se conserva la última dirección al quedar quieto
+    speed: 0.075
+  };
+
+  function clampsFor(m) {
+    return m === 'interior'
+      ? { thetaMin: -Math.PI, thetaMax: Math.PI, phiMin: 0.35, phiMax: 2.65, radMin: 0.55, radMax: 2.9 }
+      : { thetaMin: -1.3, thetaMax: 1.3, phiMin: 1.05, phiMax: 1.5, radMin: 8, radMax: 20 };
+  }
+
+  function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+  // ─── DIRECCIÓN DE FOTOGRAFÍA CINEMATOGRÁFICA ───────────────────
+  // Sistema ligero de "operador de cámara" que se apoya en toda la
+  // maquinaria de encuadre ya existente (view/updateCameraFromView para el
+  // exterior, updateStaticRoomCamera para el interior) sin sustituirla:
+  // añade micro-movimiento, planos de presentación, seguimiento con
+  // composición por tercios y acercamientos de detalle, siempre por
+  // interpolación suave y nunca con saltos ni cortes duros.
+  let cineTime = 0;          // reloj interno (segundos) para el temblor de cámara
+  let roomEnterTime = 0;     // cineTime en el que se entró en la sala activa
+  let closeupUntil = -1;     // cineTime hasta el que dura un plano de detalle forzado
+  let closeupFocus = null;   // punto {x,y,z} al que mira ese plano de detalle
+  const camSmoothed = {      // posición/objetivo de cámara ya suavizados (interior)
+    pos: new THREE.Vector3(),
+    look: new THREE.Vector3(),
+    ready: false
+  };
+  const _cineDesiredPos = new THREE.Vector3();
+  const _cineDesiredLook = new THREE.Vector3();
+  const _cineLookTmp = new THREE.Vector3();
+
+  // Ruido en dos capas de distinta frecuencia/fase: evita que el temblor de
+  // cámara se note mecánico o repetitivo. Amplitudes pensadas para ser casi
+  // imperceptibles por separado, pero dar sensación de cámara "viva" en
+  // conjunto — nunca deben producir movimientos bruscos.
+  function handheldOffset(t, ampX, ampY, ampZ, seed) {
+    return {
+      x: Math.sin(t * 0.62 + seed) * ampX * 0.6 + Math.sin(t * 1.31 + seed * 1.7) * ampX * 0.4,
+      y: Math.sin(t * 0.51 + seed * 2.1) * ampY * 0.6 + Math.sin(t * 1.09 + seed * 0.6) * ampY * 0.4,
+      z: Math.sin(t * 0.44 + seed * 1.3) * ampZ
+    };
+  }
+
+  function updateCameraFromView() {
+    const { target, radius, theta, phi } = view;
+    // Micro-oscilación angular: un operador real nunca sostiene una toma
+    // perfectamente inmóvil. La amplitud es minúscula (fracciones de grado)
+    // para no interferir con el encuadre de la fachada.
+    const n = handheldOffset(cineTime, 0.006, 0.004, 0, 4.2);
+    camera.position.set(
+      target.x + radius * Math.sin(phi + n.y) * Math.sin(theta + n.x),
+      target.y + radius * Math.cos(phi + n.y),
+      target.z + radius * Math.sin(phi + n.y) * Math.cos(theta + n.x)
+    );
+    _cineLookTmp.set(target.x + n.x * radius * 0.12, target.y + n.y * radius * 0.12, target.z);
+    camera.lookAt(_cineLookTmp);
+  }
+
+  function startTransition(endTarget, endRadius, endTheta, endPhi, dur, onDone) {
+    mode = 'transition';
+    transition = {
+      start: { target: view.target.clone(), radius: view.radius, theta: view.theta, phi: view.phi },
+      end: { target: endTarget.clone(), radius: endRadius, theta: endTheta, phi: endPhi },
+      t0: performance.now(), dur, onDone
+    };
+  }
+
+  // Habitaciones vacías: sin muebles decorativos.
+  function addRoomFurniture(room) {
+    // Intencionalmente vacío: las salas no llevan mobiliario.
+  }
+
+  rooms.forEach(addRoomFurniture);
+
+
+  // ─── ESPACIOS 3D PROFUNDOS DE CADA HABITACIÓN ─────────────
+  // La casa exterior sigue siendo la misma, pero al entrar se cambia a una
+  // estancia independiente y mucho más profunda. También es más ancha que
+  // la fachada exterior, para dejar más espacio libre por el que andar.
+  const INTERIOR_DEPTH = 4.2; // reducido para acercar la pared del fondo
+  const INTERIOR_HEIGHT = 4.6;
+  const INTERIOR_WIDTH = 7.5;
+  const INTERIOR_MARGIN = 0.18;
+
+  // ─── ATAÚD DEL DORMITORIO ───────────────────────────────────
+  // Imagen proporcionada por el usuario. Se incrusta dentro del propio HTML
+  // para que no sea necesario mantener un archivo PNG separado.
+  const bedroomCoffinTexture = new THREE.TextureLoader().load('./img/dormitorio/muebles/ataud-dormitorio.webp');
+  bedroomCoffinTexture.colorSpace = THREE.SRGBColorSpace;
+  bedroomCoffinTexture.anisotropy = 4;
+
+  const bedroomCoffinMat = new THREE.MeshBasicMaterial({
+    map: bedroomCoffinTexture,
+    transparent: true,
+    alphaTest: 0.015,
+    side: THREE.DoubleSide,
+    depthWrite: true
+  });
+
+
+  // ─── PERSONAJE DURMIENDO DEL DORMITORIO ────────────────────
+  // Imagen proporcionada por el usuario: aparece al acercarse al ataúd.
+  const bedroomSleepingTexture = new THREE.TextureLoader().load('./img/dormitorio/muebles/personaje-durmiendo.webp');
+  bedroomSleepingTexture.colorSpace = THREE.SRGBColorSpace;
+  bedroomSleepingTexture.anisotropy = 4;
+
+  const bedroomSleepingMat = new THREE.MeshBasicMaterial({
+    map: bedroomSleepingTexture,
+    transparent: true,
+    alphaTest: 0.015,
+    side: THREE.DoubleSide,
+    depthWrite: true
+  });
+
+
+  // ─── MUEBLES DEL DORMITORIO (espejo, pila de libros y aparador con calavera) ───
+  // Colocados según la captura de referencia (lienzo de 4961×3508 px). Cada pieza se
+  // recortó del PNG "MUEBLES_DORMITORIO" sin reescalar ni deformar. La posición se
+  // obtiene de sus píxeles en la referencia: el centro del viewport 3D está en
+  // (2480, 1824) px y 1 unidad a distancia 1 de la cámara equivale a 2028.1 px.
+  const bedroomMirrorTexture = new THREE.TextureLoader().load('./img/dormitorio/muebles/espejo-dormitorio.webp');
+  bedroomMirrorTexture.colorSpace = THREE.SRGBColorSpace;
+  bedroomMirrorTexture.premultiplyAlpha = true;
+  bedroomMirrorTexture.generateMipmaps = false;
+  bedroomMirrorTexture.minFilter = THREE.LinearFilter;
+  bedroomMirrorTexture.magFilter = THREE.LinearFilter;
+  const bedroomMirrorMat = new THREE.MeshBasicMaterial({
+    map: bedroomMirrorTexture, transparent: true, alphaTest: 0.02,
+    side: THREE.DoubleSide, depthTest: false, depthWrite: false
+  });
+  const bedroomBooksTexture = new THREE.TextureLoader().load('./img/dormitorio/muebles/libros-dormitorio.webp');
+  bedroomBooksTexture.colorSpace = THREE.SRGBColorSpace;
+  bedroomBooksTexture.premultiplyAlpha = true;
+  bedroomBooksTexture.generateMipmaps = false;
+  bedroomBooksTexture.minFilter = THREE.LinearFilter;
+  bedroomBooksTexture.magFilter = THREE.LinearFilter;
+  const bedroomBooksMat = new THREE.MeshBasicMaterial({
+    map: bedroomBooksTexture, transparent: true, alphaTest: 0.02,
+    side: THREE.DoubleSide, depthTest: false, depthWrite: false
+  });
+  const bedroomSideboardTexture = new THREE.TextureLoader().load('./img/dormitorio/muebles/aparador-calavera-dormitorio.webp');
+  bedroomSideboardTexture.colorSpace = THREE.SRGBColorSpace;
+  bedroomSideboardTexture.premultiplyAlpha = true;
+  bedroomSideboardTexture.generateMipmaps = false;
+  bedroomSideboardTexture.minFilter = THREE.LinearFilter;
+  bedroomSideboardTexture.magFilter = THREE.LinearFilter;
+  const bedroomSideboardMat = new THREE.MeshBasicMaterial({
+    map: bedroomSideboardTexture, transparent: true, alphaTest: 0.02,
+    side: THREE.DoubleSide, depthTest: false, depthWrite: false
+  });
+
+
+  function addInteriorRoom(room) {
+    const group = new THREE.Group();
+    group.visible = false;
+    group.userData.roomId = room.id;
+
+    const roomWidth = INTERIOR_WIDTH;
+    const cx = room.center.x;
+    const xMin = cx - roomWidth / 2;
+    const xMax = cx + roomWidth / 2;
+    const baseY = room.yMin;
+    const floorCenterY = baseY;
+
+    // Guardamos el ancho real del interior para los límites de movimiento.
+    room.interiorXMin = xMin;
+    room.interiorXMax = xMax;
+
+    // Suelo con la imagen proporcionada.
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(roomWidth, INTERIOR_DEPTH),
+      interiorFloorMat
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(cx, floorCenterY, 0);
+    group.add(floor);
+
+    // Techo.
+    const ceiling = new THREE.Mesh(
+      new THREE.PlaneGeometry(roomWidth, INTERIOR_DEPTH),
+      interiorCeilingMat
+    );
+    ceiling.rotation.x = Math.PI / 2;
+    ceiling.position.set(cx, baseY + INTERIOR_HEIGHT, 0);
+    group.add(ceiling);
+
+    // Pared trasera: mucho más lejos para que la estancia tenga profundidad real.
+    // Salón amarillo, Cocina rojo carmesí, Dormitorio morado y Estudio verde venenoso.
+    const roomWallMat = room.id === 'pb-izq' ? salonWallpaperMat : (room.id === 'pb-der' ? redRoomWallpaperMat : (room.id === 'p1-izq' ? upstairsWallpaperMat : (room.id === 'p1-der' ? studyWallpaperMat : interiorWallMat)));
+    const back = new THREE.Mesh(
+      new THREE.PlaneGeometry(roomWidth, INTERIOR_HEIGHT),
+      roomWallMat
+    );
+    back.position.set(cx, baseY + INTERIOR_HEIGHT / 2, -INTERIOR_DEPTH / 2);
+    group.add(back);
+
+    // Paredes laterales.
+    [-1, 1].forEach(side => {
+      const wall = new THREE.Mesh(
+        new THREE.PlaneGeometry(INTERIOR_DEPTH, INTERIOR_HEIGHT),
+        roomWallMat
+      );
+      wall.rotation.y = side * Math.PI / 2;
+      wall.position.set(
+        side > 0 ? xMax : xMin,
+        baseY + INTERIOR_HEIGHT / 2,
+        0
+      );
+      group.add(wall);
+    });
+
+    // Sala vacía: sin mobiliario, solo suelo, techo y paredes.
+
+
+    // Dormitorio: ataúd centrado y apoyado contra la pared del fondo.
+    // Además, al acercarse el personaje, el ataúd se sustituye por la versión
+    // del personaje durmiendo sin ataúd.
+    if (room.id === 'p1-izq') {
+      const coffinHeight = 4.2; // un poco más grande, como en la referencia
+      const coffinAspect = 807 / 1530; // proporción del objeto tras recortar transparencias
+      const coffinWidth = coffinHeight * coffinAspect;
+
+      const coffin = new THREE.Mesh(
+        new THREE.PlaneGeometry(coffinWidth, coffinHeight),
+        bedroomCoffinMat
+      );
+
+      // Centrado horizontalmente, con la base apoyada en el suelo y apenas
+      // adelantado respecto de la pared trasera para evitar parpadeos de z-fighting.
+      coffin.position.set(
+        cx,
+        baseY + coffinHeight / 2,
+        -INTERIOR_DEPTH / 2 + 0.025
+      );
+      coffin.renderOrder = 3;
+      group.add(coffin);
+
+      // El PNG durmiendo tiene bastante margen transparente alrededor.
+      // Escalamos el plano para que la FIGURA VISIBLE conserve aproximadamente
+      // la misma altura que la muñeca cuando camina (CHARACTER_HEIGHT), evitando
+      // que parezca que encoge al meterse en el ataúd.
+      const sleepingVisibleHeightRatio = 1375 / 2048;
+      const sleepingHeight = CHARACTER_HEIGHT / sleepingVisibleHeightRatio;
+      const sleepingAspect = 1447 / 2048;
+      const sleepingWidth = sleepingHeight * sleepingAspect;
+      const sleeping = new THREE.Mesh(
+        new THREE.PlaneGeometry(sleepingWidth, sleepingHeight),
+        bedroomSleepingMat
+      );
+
+      // Compensación vertical del margen transparente asimétrico del PNG:
+      // así la figura visible queda centrada dentro del ataúd, ocupándolo de
+      // arriba abajo sin deformarse ni parecer más pequeña.
+      const sleepingVisibleCenterOffset = ((1064.5 - 1024) / 2048) * sleepingHeight;
+      sleeping.position.set(
+        cx,
+        baseY + coffinHeight / 2 + sleepingVisibleCenterOffset,
+        -INTERIOR_DEPTH / 2 + 0.06
+      );
+      sleeping.renderOrder = 4;
+      sleeping.visible = false;
+      group.add(sleeping);
+
+      room.coffin = coffin;
+      room.sleepingCharacter = sleeping;
+      room.coffinTriggerHalfWidth = Math.max(0.62, coffinWidth * 0.34);
+      room.coffinSleepZ = -INTERIOR_DEPTH / 2 + 0.74;
+      room.coffinWakeZ = -INTERIOR_DEPTH / 2 + 1.18;
+
+      // ── Muebles del dormitorio: posición medida sobre la imagen de referencia ──
+      // Cámara de referencia: a 2.991 de la fachada frontal de la sala (plano de
+      // seguimiento), a media altura y centrada en la sala.
+      {
+        const REF_K = 2028.1, REF_CX = 2480, REF_CY = 1824;
+        const REF_CAM_Z = INTERIOR_DEPTH / 2 + 2.991;
+        // [material, caja en px de la referencia [x0,y0,x1,y1], distancia a la cámara]
+        const bedroomPieces = [
+          [bedroomMirrorMat,    [523, 815, 1002, 2728], 4.365], // espejo, colgado en la pared izquierda
+          [bedroomBooksMat,     [1252, 1085, 1696, 2615], 5.9], // pila de libros, contra la pared izquierda
+          [bedroomSideboardMat, [3436, 1684, 4279, 3005], 4.0]  // aparador con calavera, contra la pared derecha
+        ];
+
+        // Los libros y el aparador son obstáculos físicos. El espejo sigue siendo
+        // únicamente decorativo. Guardamos sus límites para el movimiento.
+        room.bedroomFurnitureCollisions = [];
+        bedroomPieces.forEach(([mat, b, d]) => {
+          const pw = (b[2] - b[0]) * d / REF_K;
+          const ph = (b[3] - b[1]) * d / REF_K;
+          const piece = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), mat);
+          // El aparador debe quedar físicamente pegado a la pared derecha.
+          // En lugar de depender de la coordenada de la imagen de referencia
+          // (que provoca que parezca separarse al panear la cámara), anclamos
+          // su borde derecho exactamente al límite interior de la pared.
+          const pieceX = mat === bedroomSideboardMat
+            ? xMax - pw / 2
+            : cx + (((b[0] + b[2]) / 2) - REF_CX) * d / REF_K;
+
+          piece.position.set(
+            pieceX,
+            baseY + INTERIOR_HEIGHT / 2 - (((b[1] + b[3]) / 2) - REF_CY) * d / REF_K,
+            REF_CAM_Z - d
+          );
+          piece.renderOrder = 3;
+          // Guardamos la malla real del espejo para detectarla con el mismo raycaster
+          // que detecta el póster interactivo del Estudio.
+          if (mat === bedroomMirrorMat) room.bedroomMirror = piece;
+          if (mat === bedroomBooksMat) room.bedroomBooksButton = piece;
+          if (mat === bedroomSideboardMat) {
+            // El aparador se monta sobre la propia pared derecha en lugar de
+            // flotar como una tarjeta plana: el lateral oscuro mira a cámara y
+            // la cara de las puertas queda paralela a la pared. Cada vértice se
+            // calcula con el rayo de la cámara de referencia, así que desde ese
+            // encuadre se ve igual que la imagen, pero al mover la cámara se
+            // desplaza con la pared (paralaje correcto, sin resbalar).
+            const IMG_W = 843, IMG_H = 1321;     // tamaño del webp
+            const U_SEAM = 505;                  // arista vertical entre puertas y lateral
+            const U_WALL = 835;                  // borde del lateral que toca la pared
+            const V_FOOT = 1316;                 // base de las patas
+            const wallOff = xMax - cx;
+            const dNear = wallOff * REF_K / (b[0] + U_WALL - REF_CX);
+            const doorOff = dNear * (b[0] + U_SEAM - REF_CX) / REF_K;
+            const zNear = REF_CAM_Z - dNear;
+            const yOf = (v, t) => baseY + INTERIOR_HEIGHT / 2 - (b[1] + v - REF_CY) * t / REF_K;
+            const dy = baseY - yOf(V_FOOT, dNear);   // patas apoyadas en el suelo
+
+            const buildFace = (u0, u1, cols, pointAt) => {
+              const pos = [], uv = [], idx = [];
+              for (let i = 0; i <= cols; i++) {
+                const u = u0 + (u1 - u0) * i / cols;
+                [0, IMG_H].forEach(v => {
+                  const q = pointAt(u, v);
+                  pos.push(q[0], q[1] + dy, q[2]);
+                  uv.push(u / IMG_W, 1 - v / IMG_H);
+                });
+                if (i > 0) { const a = (i - 1) * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+              }
+              const g = new THREE.BufferGeometry();
+              g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+              g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+              g.setIndex(idx);
+              const m = new THREE.Mesh(g, mat);
+              m.renderOrder = 3;
+              m.frustumCulled = false;
+              group.add(m);
+            };
+
+            // Cara de las puertas: plano paralelo a la pared derecha.
+            buildFace(0, U_SEAM, 40, (u, v) => {
+              const t = doorOff * REF_K / (b[0] + u - REF_CX);
+              return [cx + doorOff, yOf(v, t), REF_CAM_Z - t];
+            });
+            // Lateral oscuro: plano frontal que termina en la pared.
+            buildFace(U_SEAM, IMG_W, 1, (u, v) => {
+              const x = cx + (b[0] + u - REF_CX) * dNear / REF_K;
+              return [Math.min(x, xMax - 0.001), yOf(v, dNear), zNear];
+            });
+          } else {
+            group.add(piece);
+          }
+
+          if (mat === bedroomBooksMat || mat === bedroomSideboardMat) {
+            const collisionPaddingX = 0.08;
+            const collisionPaddingZ = 0.12;
+            room.bedroomFurnitureCollisions.push({
+              xMin: piece.position.x - pw / 2 - collisionPaddingX,
+              xMax: piece.position.x + pw / 2 + collisionPaddingX,
+              zMin: piece.position.z - collisionPaddingZ,
+              zMax: piece.position.z + collisionPaddingZ
+            });
+          }
+        });
+      }
+    }
+
+    if (room.id === 'pb-izq') {
+      // Estantería original facilitada por la usuaria: misma colocación de la captura de referencia.
+      // Se recorta exclusivamente el margen transparente para apoyar las patas en el suelo.
+      const salonBooksTexture = new THREE.TextureLoader().load('./img/salon/libreria-izquierda.webp');
+      salonBooksTexture.colorSpace = THREE.SRGBColorSpace;
+      salonBooksTexture.anisotropy = 4;
+      const salonBooksMaterial = new THREE.MeshBasicMaterial({
+        map: salonBooksTexture, transparent: true, alphaTest: 0.025,
+        side: THREE.DoubleSide, depthWrite: false
+      });
+      const salonBooksHeight = 4.35;
+      const salonBooksWidth = salonBooksHeight * (482 / 1881);
+      const salonBooks = new THREE.Mesh(
+        new THREE.PlaneGeometry(salonBooksWidth, salonBooksHeight), salonBooksMaterial
+      );
+      // Frente visible, lateral izquierdo en perspectiva y patas al nivel del suelo.
+      salonBooks.rotation.y = -0.08;
+      salonBooks.position.set(
+        xMin + salonBooksWidth / 2 + 0.045,
+        baseY + salonBooksHeight / 2 - 0.01,
+        INTERIOR_DEPTH / 2 - 0.55 // primer plano de la pared izquierda, como en la captura de referencia
+      );
+      group.add(salonBooks);
+      room.salonBooksButton = salonBooks; // Clic en la estantería: abrir vídeo en una ventana superpuesta.
+
+      // Cuadro de la pared derecha: imagen original de la usuaria, recortada
+      // solo por sus márgenes transparentes. Posición basada en la captura de referencia.
+      const salonPaintingTexture = new THREE.TextureLoader().load('./img/salon/cuadro-pared-derecha.webp');
+      salonPaintingTexture.colorSpace = THREE.SRGBColorSpace;
+      salonPaintingTexture.anisotropy = 4;
+      const salonPainting = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.17, 3.30),
+        new THREE.MeshBasicMaterial({
+          map: salonPaintingTexture, transparent: true, alphaTest: 0.025,
+          side: THREE.DoubleSide, depthWrite: false
+        })
+      );
+      // La perspectiva está dibujada en la imagen, por eso no se vuelve a
+      // deformar el plano. Se sitúa delante de la pared lateral derecha.
+      salonPainting.position.set(xMax - 0.73, baseY + 2.73, INTERIOR_DEPTH / 2 - 0.55);
+      salonPainting.rotation.y = -0.08;
+      group.add(salonPainting);
+      room.salonPaintingButton = salonPainting; // Clic sobre el cuadro: vídeo propio.
+
+      // El Salón: sofá gótico apoyado contra la pared del fondo, agrandado
+      // para ocupar casi todo el ancho de la pared y dar espacio de sobra
+      // para que un personaje pueda sentarse en él.
+      // El sofá se ha agrandado más todavía (ancho casi total de la pared
+      // y bastante más alto que antes) para que quede un hueco de asiento
+      // amplio y sea mucho más sencillo encajar ahí las imágenes del
+      // personaje sentado, sin tener que ajustar la posición al milímetro.
+      const sofaWidth = roomWidth - 0.12;
+      const sofaHeight = 3.35;
+      const sofa = new THREE.Mesh(
+        new THREE.PlaneGeometry(sofaWidth, sofaHeight),
+        sofaMat
+      );
+      // La imagen del sofá tiene un margen transparente inferior (~24% de
+      // su alto); hay que bajarlo esa cantidad extra (proporcional al nuevo
+      // alto) para que las patas apoyen en el suelo en vez de quedar
+      // flotando.
+      const sofaDrop = sofaHeight * 0.243;
+      sofa.position.set(cx, baseY + sofaHeight / 2 - sofaDrop, -INTERIOR_DEPTH / 2 + 0.4);
+      group.add(sofa);
+      // Zona REAL del cojín: no usamos un único punto central.
+      // El cojín ocupa la parte central del sofá, dejando fuera los dos
+      // brazos. Estos porcentajes están calculados sobre la imagen del sofá:
+      // aproximadamente desde x=305 hasta x=1180 de una imagen de 1491 px.
+      // Así la muñeca puede sentarse en cualquier punto del cojín, pero nunca
+      // encima de los brazos.
+      const sofaSeatLeftRatio = 305 / 1491;
+      const sofaSeatRightRatio = 1180 / 1491;
+      room.sofaSeatXMin = cx + (sofaSeatLeftRatio - 0.5) * sofaWidth;
+      room.sofaSeatXMax = cx + (sofaSeatRightRatio - 0.5) * sofaWidth;
+
+      // PUNTO FÍSICO DE SENTADO: más bajo y un poco más hacia delante,
+      // para que la muñeca quede realmente hundida en el cojín, como en
+      // la referencia: el cuerpo queda por debajo del borde superior del
+      // respaldo, en vez de quedar subida sobre él.
+      room.sofaSeatY = baseY + 0.365;
+
+      // El personaje queda dentro del sofá y algo más hacia delante,
+      // de modo que la pose se vea asentada sobre el cojín y no sobre el respaldo.
+      room.sofaSeatZ = -INTERIOR_DEPTH / 2 + 0.98;
+
+      // Se conserva un punto de referencia para despertar a la muñeca.
+      room.sofaSeat = new THREE.Vector3(
+        cx,
+        room.sofaSeatY,
+        room.sofaSeatZ
+      );
+
+      // Colisión del sofá: mientras la muñeca esté dentro de la anchura
+      // del cojín, no puede atravesar el sofá hacia la pared del fondo.
+      room.sofaCollision = {
+        xMin: room.sofaSeatXMin,
+        xMax: room.sofaSeatXMax,
+        zFront: room.sofaSeatZ
+      };
+    }
+
+    if (room.id === 'pb-der') {
+      // La Cocina: mueble gótico apoyado en la pared del fondo.
+      // Se escala tomando como referencia la proporción de la imagen modelo:
+      // el mueble sobresale ligeramente del ancho aparente de la pared trasera
+      // y ocupa casi toda su altura, quedando apoyado en el suelo.
+      // La imagen tiene un pequeño margen transparente inferior (~3.3%
+      // de su alto, por debajo de las lámparas colgantes), así que hay
+      // que bajar el plano esa cantidad para que el mueble apoye en el
+      // suelo en vez de flotar. Además se baja 1 cm extra a petición, y
+      // 1.5 cm más para que toque el suelo en vez del zócalo de la pared
+      // del fondo (2.5 cm extra en total).
+      const muebleWidth = roomWidth * 1.1467; // 8.60 frente a 7.50 de la pared, como en la referencia
+      const muebleAspect = 887 / 1774; // alto / ancho de la imagen original
+      const muebleHeight = muebleWidth * muebleAspect;
+      const muebleDrop = muebleHeight * 0.0327;
+      const mueble = new THREE.Mesh(
+        new THREE.PlaneGeometry(muebleWidth, muebleHeight),
+        kitchenMuebleMat
+      );
+      mueble.position.set(
+        cx,
+        baseY + muebleHeight / 2 - muebleDrop - 0.01,
+        -INTERIOR_DEPTH / 2 + 0.20
+      );
+      // Se dibuja por delante de las capas de suelo y paredes laterales.
+      mueble.renderOrder = 10;
+      group.add(mueble);
+
+      // Puerta izquierda del armario alto de la cocina: botón invisible.
+      // Coordenadas de la imagen original 1774×887, sobre el propio plano del mueble.
+      const doorW = muebleWidth * (300 / 1774);
+      const doorH = muebleHeight * (245 / 887);
+      const doorX = mueble.position.x + muebleWidth * ((255 / 1774) - 0.5);
+      const doorY = mueble.position.y + muebleHeight * (0.5 - (226 / 887));
+      const kitchenDoorButton = new THREE.Mesh(
+        new THREE.PlaneGeometry(doorW, doorH),
+        new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthTest:false,depthWrite:false,side:THREE.DoubleSide})
+      );
+      kitchenDoorButton.position.set(doorX, doorY, mueble.position.z + 0.03);
+      kitchenDoorButton.renderOrder = 22;
+      group.add(kitchenDoorButton);
+      room.kitchenDoorButton = kitchenDoorButton;
+
+
+
+      // Armario superior derecho con lunas: vídeo de Tártalo.
+      // Rectángulo de la imagen: x=1370..1630, y=110..345; separado del botón izquierdo.
+      const tartaloButton = new THREE.Mesh(
+        new THREE.PlaneGeometry(muebleWidth * (260 / 1774), muebleHeight * (235 / 887)),
+        new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthTest:false,depthWrite:false,side:THREE.DoubleSide})
+      );
+      tartaloButton.position.set(
+        mueble.position.x + muebleWidth * ((1500 / 1774) - 0.5),
+        mueble.position.y + muebleHeight * (0.5 - (227.5 / 887)),
+        mueble.position.z + 0.03
+      );
+      tartaloButton.renderOrder = 22;
+      group.add(tartaloButton);
+      room.kitchenTartaloButton = tartaloButton;
+
+      // Isla central: primer plano, delante de la muñeca, como en la captura.
+      // Su anchura deja pasillos transitables a ambos lados.
+      // Mesa frontal a escala humana: reducir uniformemente el mueble
+      // (ancho y alto) sin deformar la imagen ni cambiar su profundidad.
+      const islandWidth = roomWidth * 0.51 * 0.72;
+      const islandHeight = islandWidth * (1440 / 1684);
+      const islandZ = 0.90;
+      const island = new THREE.Mesh(
+        new THREE.PlaneGeometry(islandWidth, islandHeight), kitchenIslandMat
+      );
+      // La imagen contiene unos píxeles transparentes bajo las patas.
+      island.position.set(cx, baseY + islandHeight / 2 - 0.025, islandZ);
+      island.renderOrder = 8; // Por encima del personaje solo donde hay píxeles opacos.
+      group.add(island);
+
+      // Obstáculo físico en el plano del suelo, con margen para el cuerpo.
+      // La muñeca puede rodearlo por la izquierda y por la derecha.
+      room.kitchenIslandCollision = {
+        xMin: cx - islandWidth / 2,
+        xMax: cx + islandWidth / 2,
+        zMin: islandZ - 0.33,
+        zMax: islandZ + 0.33
+      };
+    }
+
+    if (room.id === 'p1-der') {
+      // El Estudio: mobiliario dimensionado y colocado siguiendo la captura
+      // de referencia. El ancho ocupa aproximadamente 1.15 veces el ancho
+      // de la pared, y se conserva la proporción original de la ilustración.
+      const studyFurnitureWidth = roomWidth * 1.1467;
+      const studyFurnitureHeight = studyFurnitureWidth * (1055 / 1491);
+      // Las patas traseras del escritorio llegan aproximadamente a la fila
+      // 817/1055 de la imagen. Se baja 0.40 unidades para que coincidan con
+      // el plano visible del suelo en perspectiva, como en la referencia.
+      const studyFurnitureFootRatio = 817 / 1055;
+      const studyFurniture = new THREE.Mesh(
+        new THREE.PlaneGeometry(studyFurnitureWidth, studyFurnitureHeight),
+        studyFurnitureMat
+      );
+      studyFurniture.position.set(
+        cx,
+        baseY + studyFurnitureHeight * (studyFurnitureFootRatio - 0.5) - 0.405, // bajar 0,5 cm
+        -INTERIOR_DEPTH / 2 + 0.035
+      );
+      studyFurniture.renderOrder = 3;
+      group.add(studyFurniture);
+
+      // Retrato del gato negro de la segunda balda: región del marco en la imagen 1491x1055.
+      // x=242..310, y=332..421. El botón hereda la posición del mobiliario.
+      const studyCatButton = new THREE.Mesh(
+        new THREE.PlaneGeometry(studyFurnitureWidth * (68 / 1491), studyFurnitureHeight * (89 / 1055)),
+        new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthTest:false,depthWrite:false,side:THREE.DoubleSide})
+      );
+      studyCatButton.position.set(
+        studyFurnitureWidth * (276 / 1491 - 0.5),
+        studyFurnitureHeight * (0.5 - 376.5 / 1055),
+        0.018
+      );
+      studyCatButton.renderOrder = 22;
+      studyFurniture.add(studyCatButton);
+      room.studyCatButton = studyCatButton;
+
+      // Botón invisible sobre una calavera del papel pintado de la pared del fondo.
+      // El patrón se repite 2x horizontal y 1.5x vertical.
+      // Centro del cráneo superior derecho del motivo: UV de imagen aprox. (0.667, 0.92),
+      // que corresponde en la pared a (0.8335, 0.6133).
+      const skullButton = new THREE.Mesh(
+        new THREE.PlaneGeometry(roomWidth * 0.072, INTERIOR_HEIGHT * 0.115),
+        new THREE.MeshBasicMaterial({ transparent:true, opacity:0, depthTest:false, depthWrite:false, side:THREE.DoubleSide })
+      );
+      skullButton.position.set(
+        xMin + roomWidth * 0.835,
+        baseY + INTERIOR_HEIGHT * 0.613,
+        -INTERIOR_DEPTH / 2 + 0.065
+      );
+      skullButton.renderOrder = 21;
+      group.add(skullButton);
+      room.studySkullButton = skullButton;
+      room.studyFurniture = studyFurniture;
+      // Póster de los TRES CERDITOS sobre el monitor: región de la imagen
+      // mobiliario-estudio.webp (1491x1055), x=576..812, y=48..294.
+      // Solo se añade una zona transparente; la ilustración no cambia.
+      const cemeteryPoster = new THREE.Mesh(
+        new THREE.PlaneGeometry(studyFurnitureWidth * (236 / 1491), studyFurnitureHeight * (246 / 1055)),
+        new THREE.MeshBasicMaterial({transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false})
+      );
+      cemeteryPoster.position.set(
+        studyFurnitureWidth * (694 / 1491 - 0.5),
+        studyFurnitureHeight * (0.5 - 171 / 1055),
+        0.012
+      );
+      studyFurniture.add(cemeteryPoster);
+      room.cemeteryPosterButton = cemeteryPoster;
+      // Asiento del taburete morado del centro (mobiliario-estudio.webp).
+      // El cojín ocupa aprox. x=620..795, y=633..706 en la imagen 1491x1055.
+      // No se modifica la imagen ni las colisiones existentes del Estudio.
+      room.studyStoolSeat = new THREE.Vector3(
+        cx + studyFurnitureWidth * (708 / 1491 - 0.5),
+        baseY + 0.25,
+        0.28
+      );
+      room.studyStoolTriggerX = studyFurnitureWidth * (105 / 1491);
+
+
+      // Cuadro decorativo de Rapunzel en la pared lateral DERECHA del Estudio.
+      // Dos planos fijos: marco oscuro y lámina original sin recortes.
+      const rapunzelTexture = new THREE.TextureLoader().load('./img/estudio/rapunzel-la-otra-historia.webp');
+      rapunzelTexture.colorSpace = THREE.SRGBColorSpace;
+      rapunzelTexture.anisotropy = 4;
+      const rapunzelSize = 1.24;
+      const rapunzelFrame = new THREE.Mesh(
+        new THREE.PlaneGeometry(rapunzelSize + 0.12, rapunzelSize + 0.12),
+        new THREE.MeshBasicMaterial({ color: 0x201426, side: THREE.DoubleSide, depthWrite: false })
+      );
+      // Misma cota vertical que el cuadro del Salón; sobre el plano lateral derecho.
+      // Giro de 90 grados para que el cuadro siga la perspectiva real de la pared.
+      rapunzelFrame.position.set(xMax - 0.055, baseY + 2.73, 0.10);
+      rapunzelFrame.rotation.y = -Math.PI / 2;
+      rapunzelFrame.renderOrder = 6;
+      group.add(rapunzelFrame);
+      const rapunzelPicture = new THREE.Mesh(
+        new THREE.PlaneGeometry(rapunzelSize, rapunzelSize),
+        new THREE.MeshBasicMaterial({ map: rapunzelTexture, side: THREE.DoubleSide, depthWrite: false })
+      );
+      rapunzelPicture.position.copy(rapunzelFrame.position);
+      rapunzelPicture.position.x -= 0.008; // separar la lámina del marco hacia el interior de la sala
+      rapunzelPicture.rotation.copy(rapunzelFrame.rotation);
+      rapunzelPicture.renderOrder = 7;
+      group.add(rapunzelPicture);
+      room.rapunzelPictureButton = rapunzelPicture; // El cuadro abre el PDF de Rapunzel.
+
+      // Cuadro Pig Fiction, fijado a la pared IZQUIERDA del Estudio.
+      // Su plano sigue la orientación de la pared y no se mueve con la muñeca.
+      const pigTexture = new THREE.TextureLoader().load('./img/estudio/pig-fiction-cuadro.webp');
+      pigTexture.colorSpace = THREE.SRGBColorSpace;
+      pigTexture.anisotropy = 4;
+      const pigHeight = 1.83;
+      const pigWidth = pigHeight * (1447 / 2048);
+      const pigFrame = new THREE.Mesh(
+        new THREE.PlaneGeometry(pigWidth + 0.10, pigHeight + 0.10),
+        new THREE.MeshBasicMaterial({color:0x201426,side:THREE.DoubleSide,depthWrite:false})
+      );
+      pigFrame.position.set(xMin + 0.055, baseY + 2.73, 0.10);
+      pigFrame.rotation.y = Math.PI / 2;
+      pigFrame.renderOrder = 6;
+      group.add(pigFrame);
+      const pigPicture = new THREE.Mesh(
+        new THREE.PlaneGeometry(pigWidth, pigHeight),
+        new THREE.MeshBasicMaterial({map:pigTexture,side:THREE.DoubleSide,depthWrite:false})
+      );
+      pigPicture.position.copy(pigFrame.position);
+      pigPicture.position.x += 0.008;
+      pigPicture.rotation.copy(pigFrame.rotation);
+      pigPicture.renderOrder = 7;
+      group.add(pigPicture);
+      room.pigPictureButton = pigPicture;
+      // Área de clic ligeramente mayor que la lámina, sin alterar el dibujo.
+      const pigClickArea = new THREE.Mesh(
+        new THREE.PlaneGeometry(pigWidth + 0.28, pigHeight + 0.24),
+        new THREE.MeshBasicMaterial({transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,depthTest:false})
+      );
+      pigClickArea.position.copy(pigPicture.position);
+      pigClickArea.position.x += 0.012;
+      pigClickArea.rotation.copy(pigPicture.rotation);
+      group.add(pigClickArea);
+      room.pigClickArea = pigClickArea;
+
+      // Límite invisible de profundidad del Estudio.
+      // Coincide con la posición de la muñeca en el plano de referencia:
+      // desde aquí hacia el fondo (z menor) no se puede avanzar más.
+      // Es una única barrera transversal, independiente de cada mueble.
+      // Valor calibrado a la posición de los pies de la muñeca en la referencia
+      // (aprox. z = 0.18): la barrera queda justo a su profundidad actual.
+      room.studyDepthLimit = 0.18;
+    }
+
+    interiorGroup.add(group);
+    room.interiorGroup = group;
+  }
+
+  rooms.forEach(addInteriorRoom);
+
+
+  // La música suena solo en la fachada y en la vista general de habitaciones.
+  const exteriorMusic = document.getElementById('exterior-music');
+  const musicToggle = document.getElementById('music-toggle');
+  exteriorMusic.volume = 0.32;
+  function updateMusicToggle() {
+    const playing = !exteriorMusic.paused;
+    musicToggle.textContent = playing ? '♫ Música: ON' : '♫ Música: OFF';
+    musicToggle.setAttribute('aria-pressed', String(playing));
+    musicToggle.setAttribute('aria-label', playing ? 'Quitar música de ambiente' : 'Poner música de ambiente');
+    musicToggle.hidden = mode !== 'exterior';
+  }
+  musicToggle.addEventListener('click', async () => {
+    if (!exteriorMusic.paused) exteriorMusic.pause();
+    else if (mode === 'exterior') {
+      try { await exteriorMusic.play(); }
+      catch (err) { console.warn('No se ha podido iniciar la música:', err); }
+    }
+    updateMusicToggle();
+  });
+  exteriorMusic.addEventListener('pause', updateMusicToggle);
+  exteriorMusic.addEventListener('play', updateMusicToggle);
+  updateMusicToggle();
+
+  function enterRoom(room) {
+    if (mode !== 'exterior') return;
+    // La casa solo puede abrirse por las habitaciones cuando la fachada está retirada.
+    if (facadeVisible) return;
+    exteriorMusic.pause();
+    exteriorMusic.currentTime = 0;
+    musicToggle.hidden = true;
+    activeRoom = room;
+    // El botón de volver a poner la fachada solo existe en la vista general.
+    facadeBtn.classList.remove('visible');
+    loadingEl.classList.add('visible');
+
+    // El personaje aparece de pie en el suelo, cerca del hueco frontal,
+    // mirando hacia dentro de la sala (dirección "down" = hacia cámara).
+    player.x = room.center.x;
+    player.y = room.yMin;
+    player.z = INTERIOR_DEPTH / 2 - 1.0;
+    player.state = 'idle';
+    player.direction = 'down';
+    facingDirection = 'down';
+    turnState = null;
+    anim.key = null; // fuerza a recalcular la animación al entrar
+
+    // Plano de presentación: arrancamos con la sala entera a pantalla
+    // completa (mismo encuadre de siempre) y, a partir de aquí, el
+    // director de fotografía se encarga de deslizarse suavemente hacia el
+    // seguimiento normal (ver updateInteriorCinematicCamera).
+    updateStaticRoomCamera(room);
+    roomEnterTime = cineTime;
+    camSmoothed.ready = false;
+    closeupUntil = -1;
+    closeupFocus = null;
+
+    // La vista exterior desaparece: ahora vemos un espacio 3D cerrado y profundo.
+    hitboxGroup.visible = false;
+    bgPlane.visible = false;
+    exteriorGroup.visible = false;
+    room.interiorGroup.visible = true;
+    if (room.sleepingCharacter) room.sleepingCharacter.visible = false;
+    characterSprite.visible = true;
+    updateCharacterSprite();
+    updateBedroomSleepSwap();
+
+    // Ambiente partido en dos mitades: se atenúa la luz global de la casa
+    // y se enciende una luz cálida solo en el lateral xMax de la sala, así
+    // que ese lado queda iluminado y el lado xMin se queda en penumbra.
+    ambient.intensity = AMBIENT_INTERIOR;
+    dir.intensity = DIR_INTERIOR;
+    fill.intensity = FILL_INTERIOR;
+    roomSideLight.intensity = 2.4;
+    roomSideLight.position.set(
+      room.interiorXMax - 0.8,
+      room.yMin + INTERIOR_HEIGHT * 0.65,
+      0
+    );
+
+    mode = 'interior';
+    hintEl.classList.add('hidden');
+    labelEl.textContent = room.label;
+    descEl.textContent = room.desc;
+    panelEl.classList.add('visible');
+    interiorControlsEl.classList.add('visible');
+    loadingEl.classList.remove('visible');
+    candleTarget = 1.1;
+    candle.position.set(room.center.x, room.yMin + INTERIOR_HEIGHT * 0.6, -INTERIOR_DEPTH * 0.25);
+  }
+
+  function exitRoom() {
+    if (mode !== 'interior' || !activeRoom) return;
+
+    panelEl.classList.remove('visible');
+    interiorControlsEl.classList.remove('visible');
+    activeRoom.interiorGroup.visible = false;
+    if (activeRoom.sleepingCharacter) activeRoom.sleepingCharacter.visible = false;
+    characterSprite.visible = false;
+    candleTarget = 0;
+    roomSideLight.intensity = 0;
+    ambient.intensity = AMBIENT_BASE;
+    dir.intensity = DIR_BASE;
+    fill.intensity = FILL_BASE;
+    mode = 'exterior';
+    updateMusicToggle();
+    hitboxGroup.visible = true;
+    setFacadeVisible(facadeVisible);
+    bgPlane.visible = true;
+    exteriorGroup.visible = true;
+    activeRoom = null;
+    hintEl.classList.remove('hidden');
+    updateCameraFromView();
+  }
+
+  exitBtn.addEventListener('click', exitRoom);
+  facadeBtn.addEventListener('click', () => {
+    if (mode !== 'exterior') return;
+    setFacadeVisible(true);
+  });
+  let candleTarget = 0;
+
+  // ─── CONTROLES ─────────────────────────────────────────────
+  const raycaster = new THREE.Raycaster();
+  const pointerNDC = new THREE.Vector2();
+  let isDragging = false, dragMoved = false;
+  let lastX = 0, lastY = 0;
+  const keys = {};
+
+  function setPointerFromEvent(e) {
+    const rect = canvas.getBoundingClientRect();
+    // El render ocupa un viewport 16:9 dentro del canvas: las coordenadas
+    // de los clics deben transformarse a ese viewport, no al canvas completo.
+    const vp = renderer.__fixedViewport;
+    if (vp) {
+      const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+      const px = (e.clientX - rect.left) * scaleX;
+      const py = (rect.bottom - e.clientY) * scaleY;
+      pointerNDC.x = ((px - vp.x) / vp.width) * 2 - 1;
+      pointerNDC.y = ((py - vp.y) / vp.height) * 2 - 1;
+    } else {
+      pointerNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    }
+  }
+
+  window.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    keys[k] = true;
+
+    if (mode === 'interior' && e.key === 'Escape') {
+      exitRoom();
+      return;
+    }
+
+    // Solo los controles de movimiento despiertan a la muñeca del sofá.
+    // Así un toque accidental de otra tecla no interrumpe la animación.
+    if (
+      mode === 'interior' &&
+      ['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(k)
+    ) {
+      wakeIdleAnimation();
+    }
+  });
+  window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+  const salonVideoModal = document.getElementById('salon-video-modal');
+  const salonVideoPlayer = document.getElementById('salon-video-player');
+  const salonVideoClose = document.getElementById('salon-video-close');
+  function openSalonVideo() {
+    if (mode !== 'interior' || !activeRoom || activeRoom.id !== 'pb-izq') return;
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    salonVideoModal.classList.add('visible');
+    salonVideoModal.setAttribute('aria-hidden', 'false');
+    salonVideoClose.focus();
+    // El navegador puede requerir pulsar Play; los controles siempre quedan visibles.
+    const playAttempt = salonVideoPlayer.play();
+    if (playAttempt && typeof playAttempt.catch === 'function') playAttempt.catch(() => {});
+  }
+  function closeSalonVideo() {
+    if (!salonVideoModal.classList.contains('visible')) return;
+    salonVideoPlayer.pause();
+    salonVideoPlayer.currentTime = 0;
+    salonVideoModal.classList.remove('visible');
+    salonVideoModal.setAttribute('aria-hidden', 'true');
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    canvas.focus?.();
+  }
+  salonVideoClose.addEventListener('click', closeSalonVideo);
+  salonVideoModal.addEventListener('click', e => {
+    if (e.target === salonVideoModal) closeSalonVideo();
+  });
+  window.addEventListener('keydown', e => {
+    if (!salonVideoModal.classList.contains('visible')) return;
+    if (e.key === 'Escape') closeSalonVideo();
+    e.stopImmediatePropagation();
+  }, true);
+
+  const salonPaintingVideoModal = document.getElementById('salon-painting-video-modal');
+  const salonPaintingVideoPlayer = document.getElementById('salon-painting-video-player');
+  const salonPaintingVideoClose = document.getElementById('salon-painting-video-close');
+  function openSalonPaintingVideo() {
+    if (mode !== 'interior' || !activeRoom || activeRoom.id !== 'pb-izq') return;
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    salonPaintingVideoModal.classList.add('visible');
+    salonPaintingVideoModal.setAttribute('aria-hidden', 'false');
+    salonPaintingVideoClose.focus();
+    const playAttempt = salonPaintingVideoPlayer.play();
+    if (playAttempt && typeof playAttempt.catch === 'function') playAttempt.catch(() => {});
+  }
+  function closeSalonPaintingVideo() {
+    if (!salonPaintingVideoModal.classList.contains('visible')) return;
+    salonPaintingVideoPlayer.pause();
+    salonPaintingVideoPlayer.currentTime = 0;
+    salonPaintingVideoModal.classList.remove('visible');
+    salonPaintingVideoModal.setAttribute('aria-hidden', 'true');
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    canvas.focus?.();
+  }
+  salonPaintingVideoClose.addEventListener('click', closeSalonPaintingVideo);
+  salonPaintingVideoModal.addEventListener('click', e => {
+    if (e.target === salonPaintingVideoModal) closeSalonPaintingVideo();
+  });
+  window.addEventListener('keydown', e => {
+    if (!salonPaintingVideoModal.classList.contains('visible')) return;
+    if (e.key === 'Escape') closeSalonPaintingVideo();
+    e.stopImmediatePropagation();
+  }, true);
+
+  const mirrorReportModal = document.getElementById('mirror-report-modal');
+  const mirrorReportClose = document.getElementById('mirror-report-close');
+  function closeMirrorReport() {
+    mirrorReportModal.classList.remove('visible');
+  }
+  mirrorReportClose.addEventListener('click', closeMirrorReport);
+  mirrorReportModal.addEventListener('click', e => {
+    if (e.target === mirrorReportModal) closeMirrorReport();
+  });
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && mirrorReportModal.classList.contains('visible')) {
+      closeMirrorReport();
+      e.stopPropagation();
+    }
+  }, true);
+
+  
+
+
+  // Visor de los bocetos de Sibille y Poewee en la cocina.
+  const personajesModal = document.getElementById('personajes-modal');
+  const personajesClose = document.getElementById('personajes-close');
+  const personajesViewer = document.getElementById('personajes-viewer');
+  function openPersonajes() {
+    if (mode !== 'interior' || !activeRoom || activeRoom.id !== 'pb-der') return;
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    personajesViewer.scrollTop = 0;
+    personajesModal.classList.add('visible');
+    personajesModal.setAttribute('aria-hidden','false');
+    personajesClose.focus();
+  }
+  function closePersonajes() {
+    if (!personajesModal.classList.contains('visible')) return;
+    personajesModal.classList.remove('visible');
+    personajesModal.setAttribute('aria-hidden','true');
+    personajesViewer.scrollTop = 0;
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    canvas.focus?.();
+  }
+  personajesClose.addEventListener('click', closePersonajes);
+  personajesModal.addEventListener('click', e => { if (e.target === personajesModal) closePersonajes(); });
+  window.addEventListener('keydown', e => {
+    if (!personajesModal.classList.contains('visible')) return;
+    if (e.key === 'Escape') closePersonajes();
+    e.stopImmediatePropagation();
+  }, true);
+
+  // La pila de libros del Dormitorio abre el cómic Abismo, sin PDF descargable.
+  const abismoModal = document.getElementById('abismo-modal');
+  const abismoClose = document.getElementById('abismo-close');
+  const abismoViewer = document.getElementById('abismo-viewer');
+  function openAbismo() {
+    if (mode !== 'interior' || !activeRoom || activeRoom.id !== 'p1-izq') return;
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    abismoViewer.scrollTop = 0;
+    abismoModal.classList.add('visible');
+    abismoModal.setAttribute('aria-hidden','false');
+    abismoClose.focus();
+  }
+  function closeAbismo() {
+    if (!abismoModal.classList.contains('visible')) return;
+    abismoModal.classList.remove('visible');
+    abismoModal.setAttribute('aria-hidden','true');
+    abismoViewer.scrollTop = 0;
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    canvas.focus?.();
+  }
+  abismoClose.addEventListener('click',closeAbismo);
+  abismoModal.addEventListener('click',e=>{if(e.target===abismoModal)closeAbismo();});
+  window.addEventListener('keydown',e=>{
+    if (!abismoModal.classList.contains('visible')) return;
+    if(e.key==='Escape')closeAbismo();
+    e.stopImmediatePropagation();
+  },true);
+
+  const rapunzelPdfModal = document.getElementById('rapunzel-pdf-modal');
+  const rapunzelPdfClose = document.getElementById('rapunzel-pdf-close');
+  const rapunzelPdfViewer = document.getElementById('rapunzel-pdf-viewer');
+  function openRapunzelPdf() {
+    if (mode !== 'interior' || !activeRoom || activeRoom.id !== 'p1-der') return;
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    rapunzelPdfViewer.scrollTop = 0;
+    rapunzelPdfModal.classList.add('visible');
+    rapunzelPdfModal.setAttribute('aria-hidden', 'false');
+    rapunzelPdfClose.focus();
+  }
+  function closeRapunzelPdf() {
+    if (!rapunzelPdfModal.classList.contains('visible')) return;
+    rapunzelPdfModal.classList.remove('visible');
+    rapunzelPdfModal.setAttribute('aria-hidden', 'true');
+    rapunzelPdfViewer.scrollTop = 0;
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    canvas.focus?.();
+  }
+  rapunzelPdfClose.addEventListener('click', closeRapunzelPdf);
+  rapunzelPdfModal.addEventListener('click', e => { if (e.target === rapunzelPdfModal) closeRapunzelPdf(); });
+  window.addEventListener('keydown', e => {
+    if (!rapunzelPdfModal.classList.contains('visible')) return;
+    if (e.key === 'Escape') closeRapunzelPdf();
+    e.stopImmediatePropagation();
+  }, true);
+
+  const pigVideoModal = document.getElementById('pig-video-modal');
+  const pigVideoPlayer = document.getElementById('pig-video-player');
+  const pigVideoClose = document.getElementById('pig-video-close');
+  function openPigVideo() {
+    if (mode !== 'interior' || !activeRoom || activeRoom.id !== 'p1-der') return;
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    pigVideoModal.classList.add('visible');
+    pigVideoModal.setAttribute('aria-hidden','false');
+    pigVideoClose.focus();
+    const attempt = pigVideoPlayer.play();
+    if (attempt && typeof attempt.catch === 'function') attempt.catch(() => {});
+  }
+  function closePigVideo() {
+    if (!pigVideoModal.classList.contains('visible')) return;
+    pigVideoPlayer.pause();
+    pigVideoPlayer.currentTime = 0;
+    pigVideoModal.classList.remove('visible');
+    pigVideoModal.setAttribute('aria-hidden','true');
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    canvas.focus?.();
+  }
+  pigVideoClose.addEventListener('click',closePigVideo);
+  pigVideoModal.addEventListener('click',e => { if (e.target === pigVideoModal) closePigVideo(); });
+  window.addEventListener('keydown',e => {
+    if (!pigVideoModal.classList.contains('visible')) return;
+    if (e.key === 'Escape') closePigVideo();
+    e.stopImmediatePropagation();
+  },true);
+
+  const catVideoModal = document.getElementById('cat-video-modal');
+  const catVideoPlayer = document.getElementById('cat-video-player');
+  const catVideoClose = document.getElementById('cat-video-close');
+  function openCatVideo() {
+    if (mode !== 'interior' || !activeRoom || activeRoom.id !== 'p1-der') return;
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    catVideoModal.classList.add('visible');
+    catVideoModal.setAttribute('aria-hidden','false');
+    catVideoClose.focus();
+    const attempt = catVideoPlayer.play();
+    if (attempt && typeof attempt.catch === 'function') attempt.catch(() => {});
+  }
+  function closeCatVideo() {
+    if (!catVideoModal.classList.contains('visible')) return;
+    catVideoPlayer.pause();
+    catVideoPlayer.currentTime = 0;
+    catVideoModal.classList.remove('visible');
+    catVideoModal.setAttribute('aria-hidden','true');
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    canvas.focus?.();
+  }
+  catVideoClose.addEventListener('click',closeCatVideo);
+  catVideoModal.addEventListener('click',e => { if (e.target === catVideoModal) closeCatVideo(); });
+  window.addEventListener('keydown',e => {
+    if (!catVideoModal.classList.contains('visible')) return;
+    if (e.key === 'Escape') closeCatVideo();
+    e.stopImmediatePropagation();
+  },true);
+
+  const tartaloVideoModal = document.getElementById('tartalo-video-modal');
+  const tartaloVideoPlayer = document.getElementById('tartalo-video-player');
+  const tartaloVideoClose = document.getElementById('tartalo-video-close');
+  function openTartaloVideo() {
+    if (mode !== 'interior' || !activeRoom || activeRoom.id !== 'pb-der') return;
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    tartaloVideoModal.classList.add('visible');
+    tartaloVideoModal.setAttribute('aria-hidden','false');
+    tartaloVideoClose.focus();
+    const attempt = tartaloVideoPlayer.play();
+    if (attempt && typeof attempt.catch === 'function') attempt.catch(() => {});
+  }
+  function closeTartaloVideo() {
+    if (!tartaloVideoModal.classList.contains('visible')) return;
+    tartaloVideoPlayer.pause();
+    tartaloVideoPlayer.currentTime = 0;
+    tartaloVideoModal.classList.remove('visible');
+    tartaloVideoModal.setAttribute('aria-hidden','true');
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    canvas.focus?.();
+  }
+  tartaloVideoClose.addEventListener('click',closeTartaloVideo);
+  tartaloVideoModal.addEventListener('click',e => { if (e.target === tartaloVideoModal) closeTartaloVideo(); });
+  window.addEventListener('keydown',e => {
+    if (!tartaloVideoModal.classList.contains('visible')) return;
+    if (e.key === 'Escape') closeTartaloVideo();
+    e.stopImmediatePropagation();
+  },true);
+
+  // Visor del vídeo de la calavera: se cierra sin cambiar la escena.
+  const ghostVideoModal = document.getElementById('ghost-video-modal');
+  const ghostVideoPlayer = document.getElementById('ghost-video-player');
+  const ghostVideoClose = document.getElementById('ghost-video-close');
+  function openGhostVideo() {
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    ghostVideoModal.classList.add('visible');
+    ghostVideoModal.setAttribute('aria-hidden','false');
+    ghostVideoClose.focus();
+    const promise = ghostVideoPlayer.play();
+    if (promise && promise.catch) promise.catch(() => {});
+  }
+  function closeGhostVideo() {
+    if (!ghostVideoModal.classList.contains('visible')) return;
+    ghostVideoPlayer.pause(); ghostVideoPlayer.currentTime = 0;
+    ghostVideoModal.classList.remove('visible');
+    ghostVideoModal.setAttribute('aria-hidden','true');
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    canvas.focus?.();
+  }
+  ghostVideoClose.addEventListener('click',closeGhostVideo);
+  ghostVideoModal.addEventListener('click',e => { if(e.target === ghostVideoModal) closeGhostVideo(); });
+  window.addEventListener('keydown',e => {
+    if (!ghostVideoModal.classList.contains('visible')) return;
+    if (e.key === 'Escape') closeGhostVideo();
+    e.stopImmediatePropagation();
+  },true);
+
+  // Objetos interactivos para el cursor de calaverita; sin destellos ni contornos.
+  const sparkTargets = ['kitchenDoorButton','kitchenTartaloButton','bedroomBooksButton','bedroomMirror','salonBooksButton','salonPaintingButton',
+    'rapunzelPictureButton','pigClickArea','studyCatButton','studySkullButton','cemeteryPosterButton'];
+  function hitStudySkull() {
+    if (mode!=='interior' || !activeRoom || activeRoom.id!=='p1-der') return false;
+    return !!(activeRoom.studySkullButton && raycaster.intersectObject(activeRoom.studySkullButton,false).length);
+  }
+
+
+  // Los tres cuervos posados están pintados en la imagen de fondo CSS.
+  // Convertimos las coordenadas del clic a píxeles reales de esa imagen,
+  // respetando background-size:cover y background-position:center.
+  const crowSound = new Audio('https://res.cloudinary.com/dslosjjeb/video/upload/v1793180326/crow-caw_n15vqa.wav');
+  crowSound.preload = 'auto';
+  crowSound.volume = 0.8;
+  const crowSpots = [
+    {x:206,y:89,rx:49,ry:48},    // rama del árbol izquierdo
+    {x:366,y:221,rx:37,ry:43},  // cabeza del ángel
+    {x:1648,y:320,rx:43,ry:48}  // lápida derecha
+  ];
+  function crowAtEvent(e) {
+    if (mode !== 'exterior') return false;
+    const wrapRect = document.getElementById('wrap').getBoundingClientRect();
+    const x = e.clientX - wrapRect.left, y = e.clientY - wrapRect.top;
+    if (x < 0 || y < 0 || x > wrapRect.width || y > wrapRect.height) return false;
+    const scale = Math.max(wrapRect.width / 1813, wrapRect.height / 868);
+    const drawW = 1813 * scale, drawH = 868 * scale;
+    const imgX = (x - (wrapRect.width - drawW) / 2) / scale;
+    const imgY = (y - (wrapRect.height - drawH) / 2) / scale;
+    return crowSpots.some(c => ((imgX-c.x)/c.rx)**2 + ((imgY-c.y)/c.ry)**2 <= 1);
+  }
+  function playCrow() {
+    crowSound.pause();
+    crowSound.currentTime = 0;
+    crowSound.play().catch(() => {});
+  }
+
+
+  // Luna llena del fondo: zona circular adaptada al recorte de la pantalla.
+  const wolfSound = new Audio('https://res.cloudinary.com/dslosjjeb/video/upload/v1793184721/dragon-studio-wolf-howl-359873_tpacfw.mp3');
+  wolfSound.preload = 'none';
+  wolfSound.volume = 0.8;
+  function moonAtEvent(e) {
+    if (mode !== 'exterior') return false;
+    const wrapRect = document.getElementById('wrap').getBoundingClientRect();
+    const x = e.clientX - wrapRect.left, y = e.clientY - wrapRect.top;
+    if (x < 0 || y < 0 || x > wrapRect.width || y > wrapRect.height) return false;
+    const scale = Math.max(wrapRect.width / 1813, wrapRect.height / 868);
+    const drawW = 1813 * scale, drawH = 868 * scale;
+    const imgX = (x - (wrapRect.width - drawW) / 2) / scale;
+    const imgY = (y - (wrapRect.height - drawH) / 2) / scale;
+    return ((imgX - 1357) / 100)**2 + ((imgY - 145) / 100)**2 <= 1;
+  }
+  function playWolf() {
+    wolfSound.pause();
+    wolfSound.currentTime = 0;
+    wolfSound.play().catch(() => {});
+  }
+
+  canvas.addEventListener('pointerdown', e => {
+    if (moonAtEvent(e)) { playWolf(); e.preventDefault(); e.stopPropagation(); return; }
+    if (crowAtEvent(e)) { playCrow(); e.preventDefault(); e.stopPropagation(); return; }
+    if (mode === 'transition') return;
+
+
+    // Armario superior derecho de la Cocina: vídeo de Tártalo.
+    if (mode === 'interior' && activeRoom && activeRoom.id === 'pb-der' && activeRoom.kitchenTartaloButton) {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC,camera);
+      if (raycaster.intersectObject(activeRoom.kitchenTartaloButton,false).length) {
+        openTartaloVideo(); e.preventDefault(); e.stopPropagation(); return;
+      }
+    }
+
+    // Armario superior izquierdo del mueble de cocina: desarrollo de personajes.
+    if (mode === 'interior' && activeRoom && activeRoom.kitchenDoorButton) {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC,camera);
+      if (raycaster.intersectObject(activeRoom.kitchenDoorButton,false).length) {
+        openPersonajes(); e.preventDefault(); e.stopPropagation(); return;
+      }
+    }
+
+    // Marco del gato negro: vídeo propio, sin alterar otros objetos del Estudio.
+    if (mode === 'interior' && activeRoom && activeRoom.id === 'p1-der' && activeRoom.studyCatButton) {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC,camera);
+      if (raycaster.intersectObject(activeRoom.studyCatButton,false).length) {
+        openCatVideo(); e.preventDefault(); e.stopPropagation(); return;
+      }
+    }
+
+    // Calavera del papel pintado de la pared del fondo del Estudio.
+    if (mode === 'interior' && activeRoom && activeRoom.studySkullButton) {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC,camera);
+      if (hitStudySkull()) {
+        openGhostVideo(); e.preventDefault(); e.stopPropagation(); return;
+      }
+    }
+
+    // Póster de los tres cerditos de la pared del fondo, sobre el monitor.
+    if (mode === 'interior' && activeRoom && activeRoom.cemeteryPosterButton) {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC,camera);
+      if (raycaster.intersectObject(activeRoom.cemeteryPosterButton,false).length) {
+        openCemeteryStory();
+        e.preventDefault(); e.stopPropagation(); return;
+      }
+    }
+
+    // Cuadro Pig Fiction: únicamente el cuadro de la pared izquierda del Estudio.
+    if (mode === 'interior' && activeRoom && activeRoom.id === 'p1-der' && activeRoom.pigPictureButton) {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC,camera);
+      if (raycaster.intersectObject(activeRoom.pigClickArea || activeRoom.pigPictureButton,false).length) {
+        openPigVideo();
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+    }
+
+    // El cuadro de Rapunzel en la pared derecha del Estudio abre su PDF.
+    if (mode === 'interior' && activeRoom && activeRoom.id === 'p1-der' && activeRoom.rapunzelPictureButton) {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC, camera);
+      if (raycaster.intersectObject(activeRoom.rapunzelPictureButton, false).length) {
+        openRapunzelPdf();
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+    }
+
+    // El cuadro derecho del Salón abre su propio vídeo sin cambiar el escenario.
+    if (mode === 'interior' && activeRoom && activeRoom.id === 'pb-izq' && activeRoom.salonPaintingButton) {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC, camera);
+      const paintingHits = raycaster.intersectObject(activeRoom.salonPaintingButton, false);
+      if (paintingHits.length) {
+        openSalonPaintingVideo();
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+    }
+
+    // La estantería izquierda del Salón abre un vídeo, sin salir de la habitación.
+    if (mode === 'interior' && activeRoom && activeRoom.id === 'pb-izq' && activeRoom.salonBooksButton) {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC, camera);
+      const shelfHits = raycaster.intersectObject(activeRoom.salonBooksButton, false);
+      if (shelfHits.length) {
+        openSalonVideo();
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+    }
+
+    // Libros del Dormitorio: abrir Abismo al pulsar sobre la pila.
+    if (mode === 'interior' && activeRoom && activeRoom.id === 'p1-izq' && activeRoom.bedroomBooksButton) {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC,camera);
+      if (raycaster.intersectObject(activeRoom.bedroomBooksButton,false).length) {
+        openAbismo(); e.preventDefault(); e.stopPropagation(); return;
+      }
+    }
+
+    // Igual que el póster del cerdito del Estudio, detectamos el clic directamente
+    // sobre el objeto 3D. En el Dormitorio abrimos el informe en una capa superpuesta.
+    if (mode === 'interior' && activeRoom && activeRoom.id === 'p1-izq' && activeRoom.bedroomMirror) {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC, camera);
+      const mirrorHits = raycaster.intersectObject(activeRoom.bedroomMirror, false);
+      if (mirrorHits.length) {
+        mirrorReportModal.classList.add('visible');
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+    }
+
+    // El cuento se abre en una ventana nueva desde el póster del fondo.
+
+    isDragging = true; dragMoved = false;
+    lastX = e.clientX; lastY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+    canvas.classList.add('grabbing');
+  });
+
+  canvas.addEventListener('pointermove', e => {
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+
+    if (isDragging) {
+      if (Math.abs(dx) + Math.abs(dy) > 3) dragMoved = true;
+
+      // En el exterior la vista permanece fija para que la fachada no se mueva.
+      // En interior la cámara también es fija: no se reacciona al arrastre.
+      lastX = e.clientX; lastY = e.clientY;
+      return;
+    }
+
+    if (mode === 'interior') {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC, camera);
+      const clickable = activeRoom && (hitStudySkull() || sparkTargets.some(key =>
+        activeRoom[key] && raycaster.intersectObject(activeRoom[key],false).length > 0));
+      canvas.classList.toggle('hoverable',!!clickable);
+      return;
+    }
+
+    if (mode === 'exterior') {
+      if (moonAtEvent(e) || crowAtEvent(e)) { canvas.classList.add('hoverable'); return; }
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC, camera);
+
+      if (facadeVisible) {
+        // La fachada tiene prioridad absoluta sobre las habitaciones.
+        const facadeHits = raycaster.intersectObject(facadeMesh, false);
+        canvas.classList.toggle('hoverable', facadeHits.length > 0);
+        hitboxGroup.children.forEach(m => m.material.opacity = 0);
+        return;
+      }
+
+      const hits = raycaster.intersectObjects(hitboxGroup.children);
+      hitboxGroup.children.forEach(m => m.material.opacity = 0);
+      if (hits.length) {
+        hits[0].object.material.opacity = 0.16;
+        canvas.classList.add('hoverable');
+      } else canvas.classList.remove('hoverable');
+    }
+  });
+
+  window.addEventListener('pointerup', e => {
+    if (!isDragging) return;
+    isDragging = false;
+    canvas.classList.remove('grabbing');
+
+    if (!dragMoved && mode === 'exterior') {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC, camera);
+
+      if (facadeVisible) {
+        const facadeHits = raycaster.intersectObject(facadeMesh, false);
+        if (facadeHits.length) setFacadeVisible(false);
+        return;
+      }
+
+      // El cuento se abre desde pointerdown sobre el póster,
+      // por lo que aquí no volvemos a ejecutar ninguna apertura.
+
+      const hits = raycaster.intersectObjects(hitboxGroup.children);
+      if (hits.length) enterRoom(hits[0].object.userData.room);
+    }
+  });
+
+  canvas.addEventListener('wheel', e => {
+    // Evita el scroll de la página: la casa permanece siempre completa y fija.
+    e.preventDefault();
+  }, {passive:false});
+
+  // ─── MOVIMIENTO DENTRO DE LA HABITACIÓN ───────────────────
+  // Direcciones cardinales en el mundo (no relativas a ningún "yaw" de
+  // cámara): las flechas mueven al personaje en X/Z directamente, igual
+  // que en el juego 2D. Esto es lo que decide walk_up/down/left/right.
+  //
+  // player.x/player.y/player.z (POSICIÓN) y player.state/player.direction
+  // (ANIMACIÓN) son conceptos independientes: esta función solo toca la
+  // posición; quién dibuja qué frame es cosa de updateCharacterAnimation.
+  // Despierta a la muñeca si estaba sentada. Al hacerlo se coloca justo
+  // delante del sofá para que el siguiente movimiento con los cursores la
+  // saque de la zona de asiento y vuelva a caminar por la casa.
+  function wakeIdleAnimation() {
+    if (mode !== 'interior' || !activeRoom) return;
+
+    if (player.state === 'sitting' && (activeRoom.sofaSeat || activeRoom.studyStoolSeat)) {
+      if (activeRoom.studyStoolSeat && !activeRoom.sofaSeat) {
+        player.state = 'idle';
+        player.x = activeRoom.studyStoolSeat.x;
+        player.z = Math.max(activeRoom.studyDepthLimit ?? 0.18, activeRoom.studyStoolSeat.z + 0.67);
+        player.y = activeRoom.yMin;
+        player.direction = 'down';
+        facingDirection = 'down';
+        turnState = null;
+        anim.key = null; anim.frameIndex = 0; anim.timer = 0; anim.frozen = false;
+        updateCharacterSprite();
+        return;
+      }
+      player.state = 'idle';
+      player.z = (activeRoom.sofaSeatZ ?? activeRoom.sofaSeat.z) + 0.62;
+      player.x = Math.max(
+        activeRoom.sofaSeatXMin ?? activeRoom.sofaSeat.x,
+        Math.min(activeRoom.sofaSeatXMax ?? activeRoom.sofaSeat.x, player.x)
+      );
+      player.y = activeRoom.yMin;
+      player.direction = 'down';
+      facingDirection = 'down';
+      turnState = null;
+      anim.key = null;
+      anim.frameIndex = 0;
+      anim.timer = 0;
+      anim.frozen = false;
+      updateCharacterSprite();
+      return;
+    }
+
+    if (player.state === 'sleeping' && activeRoom.id === 'p1-izq') {
+      player.state = 'idle';
+      player.x = activeRoom.center.x;
+      player.y = activeRoom.yMin;
+      player.z = activeRoom.coffinWakeZ ?? (-INTERIOR_DEPTH / 2 + 1.18);
+      player.direction = 'down';
+      facingDirection = 'down';
+      turnState = null;
+      anim.key = null;
+      anim.frameIndex = 0;
+      anim.timer = 0;
+      anim.frozen = false;
+      if (activeRoom.sleepingCharacter) activeRoom.sleepingCharacter.visible = false;
+      updateCharacterSprite();
+    }
+  }
+
+  function updateBedroomSleepSwap() {
+    if (mode !== 'interior' || !activeRoom || activeRoom.id !== 'p1-izq') return;
+    if (!activeRoom.coffin || !activeRoom.sleepingCharacter) return;
+
+    const triggerHalfWidth = activeRoom.coffinTriggerHalfWidth ?? 0.8;
+    const sleepZ = activeRoom.coffinSleepZ ?? (-INTERIOR_DEPTH / 2 + 0.74);
+    const atFrontOfCoffin =
+      player.state === 'walking' &&
+      !turnState &&
+      Math.abs(player.x - activeRoom.center.x) <= triggerHalfWidth &&
+      player.z <= sleepZ;
+
+    if (atFrontOfCoffin) {
+      player.state = 'sleeping';
+      player.x = activeRoom.center.x;
+      player.y = activeRoom.yMin;
+      player.z = sleepZ;
+      player.direction = 'down';
+      facingDirection = 'down';
+      turnState = null;
+      anim.key = null;
+      anim.frameIndex = 0;
+      anim.timer = 0;
+      anim.frozen = true;
+    }
+
+    activeRoom.coffin.visible = true;
+    activeRoom.sleepingCharacter.visible = (player.state === 'sleeping');
+  }
+
+  // Se sienta automáticamente al llegar al punto de asiento del sofá del salón.
+  // La pose sigue siendo la de sentarse sobre la parte superior del respaldo.
+  function trySitAtSofa() {
+    if (mode !== 'interior' || !activeRoom || activeRoom.id !== 'pb-izq') return false;
+    if (!activeRoom.sofaSeat || player.state !== 'walking' || turnState) return false;
+
+    const seatXMin = activeRoom.sofaSeatXMin ?? activeRoom.sofaSeat.x;
+    const seatXMax = activeRoom.sofaSeatXMax ?? activeRoom.sofaSeat.x;
+    const seatY = activeRoom.sofaSeatY ?? activeRoom.sofaSeat.y;
+    const seatZ = activeRoom.sofaSeatZ ?? activeRoom.sofaSeat.z;
+
+    // Puede sentarse en TODO el cojín. Conservamos el x donde ha llegado
+    // y solo lo limitamos al área útil entre los dos brazos.
+    const targetX = Math.max(seatXMin, Math.min(seatXMax, player.x));
+    const dz = player.z - seatZ;
+    const reachedCushion = player.x >= seatXMin - 0.18 &&
+                           player.x <= seatXMax + 0.18 &&
+                           Math.abs(dz) <= 0.48;
+
+    if (reachedCushion) {
+      player.x = targetX;
+      player.y = seatY;
+      player.z = seatZ;
+      player.state = 'sitting';
+      player.direction = 'down';
+      facingDirection = 'down';
+      turnState = null;
+      anim.key = 'sit_sofa';
+      anim.frameIndex = 0;
+      anim.timer = 0;
+      anim.frozen = false;
+      applyAnimFrame();
+      updateCharacterSprite();
+
+      // Momento especial: un breve plano de detalle cinematográfico sobre
+      // el sofá al sentarse, que después vuelve solo al plano normal.
+      closeupUntil = cineTime + CINE_CLOSEUP_DUR;
+      closeupFocus = { x: targetX, y: seatY, z: seatZ };
+      return true;
+    }
+    return false;
+  }
+
+  // El taburete del Estudio reutiliza íntegramente la animación RUBIK del sofá.
+  function trySitAtStudyStool() {
+    if (mode !== 'interior' || !activeRoom || activeRoom.id !== 'p1-der') return false;
+    const seat = activeRoom.studyStoolSeat;
+    if (!seat || player.state !== 'walking' || turnState) return false;
+    // Se activa al acercarse frontalmente al cojín, sin exigir atravesar la mesa.
+    if (Math.abs(player.x - seat.x) > 0.49 || Math.abs(player.z - seat.z) > 0.62) return false;
+    player.x = seat.x;
+    player.y = seat.y;
+    player.z = seat.z;
+    player.state = 'sitting';
+    player.direction = 'down';
+    facingDirection = 'down';
+    turnState = null;
+    anim.key = 'sit_sofa';
+    anim.frameIndex = 0;
+    anim.timer = 0;
+    anim.frozen = false;
+    applyAnimFrame();
+    updateCharacterSprite();
+    closeupUntil = cineTime + CINE_CLOSEUP_DUR;
+    closeupFocus = { x: seat.x, y: seat.y, z: seat.z };
+    return true;
+  }
+
+  function movePlayer() {
+    if (mode !== 'interior' || !activeRoom) return;
+    if (player.state === 'sitting' || player.state === 'sleeping') return;
+
+    let moveX = 0, moveZ = 0;
+    if (keys['arrowup']    || keys['w']) moveZ -= 1;
+    if (keys['arrowdown']  || keys['s']) moveZ += 1;
+    if (keys['arrowleft']  || keys['a']) moveX -= 1;
+    if (keys['arrowright'] || keys['d']) moveX += 1;
+
+    const isMoving = moveX !== 0 || moveZ !== 0;
+    player.state = isMoving ? 'walking' : 'idle';
+
+    if (!isMoving) return; // sin pulsar nada: idle, y se conserva player.direction tal cual estaba
+
+    // Dirección dominante para elegir la animación. En diagonal exacta
+    // (p.ej. arriba+derecha) priorizamos el eje vertical, que es el que
+    // más se nota visualmente en una perspectiva como esta; el
+    // movimiento físico sigue siendo diagonal de verdad.
+    let requestedDirection;
+    if (Math.abs(moveZ) >= Math.abs(moveX)) {
+      requestedDirection = moveZ < 0 ? 'up' : 'down';
+    } else {
+      requestedDirection = moveX < 0 ? 'left' : 'right';
+    }
+
+    // Si cambia la dirección, primero se reproduce la vuelta con los
+    // fotogramas 001..011. El movimiento físico continúa, pero visualmente
+    // la muñeca gira de una orientación a la otra como si fuera 3D.
+    if (requestedDirection !== player.direction) {
+      player.direction = requestedDirection;
+      beginTurn(requestedDirection);
+    } else if (!turnState && requestedDirection !== facingDirection) {
+      beginTurn(requestedDirection);
+    }
+
+    const len = Math.hypot(moveX, moveZ) || 1;
+    const speed = player.speed * (keys['shift'] ? 1.7 : 1);
+    const nextX = player.x + (moveX / len) * speed;
+    const nextZ = player.z + (moveZ / len) * speed;
+
+    // Límites de la habitación: la posición física se limita teniendo en cuenta
+    // el ancho visible de la muñeca, para que ni el sprite ni sus pies lleguen
+    // a meterse dentro de las paredes.
+    const wallMarginX = Math.max(0.32, CHARACTER_WIDTH * 0.5 + 0.08);
+    const wallMarginZ = 0.42;
+    const minX = activeRoom.interiorXMin + wallMarginX;
+    const maxX = activeRoom.interiorXMax - wallMarginX;
+    const minZ = -INTERIOR_DEPTH/2 + wallMarginZ;
+    const maxZ = INTERIOR_DEPTH/2 - wallMarginZ;
+
+    let resolvedX = Math.max(minX, Math.min(maxX, nextX));
+    let resolvedZ = Math.max(minZ, Math.min(maxZ, nextZ));
+
+    // Colisión con el sofá: si la muñeca cae dentro de su ancho, no puede
+    // atravesarlo para llegar a la pared del fondo.
+    if (activeRoom.sofaCollision) {
+      const sc = activeRoom.sofaCollision;
+      if (resolvedX > sc.xMin && resolvedX < sc.xMax && resolvedZ < sc.zFront) {
+        resolvedZ = sc.zFront;
+      }
+    }
+
+    // Colisión sólida de la isla de Cocina: no se atraviesa ni de frente,
+    // ni desde atrás, ni lateralmente. Se permite rodearla por ambos lados.
+    if (activeRoom.kitchenIslandCollision) {
+      const c = activeRoom.kitchenIslandCollision;
+      const halfX = Math.max(0.28, CHARACTER_WIDTH * 0.5);
+      const halfZ = 0.20;
+      const x0 = c.xMin - halfX, x1 = c.xMax + halfX;
+      const z0 = c.zMin - halfZ, z1 = c.zMax + halfZ;
+      if (resolvedX > x0 && resolvedX < x1 && resolvedZ > z0 && resolvedZ < z1) {
+        // Resolver desde la posición anterior evita que una diagonal cruce
+        // la esquina del obstáculo.
+        if (player.z >= z1) resolvedZ = z1;
+        else if (player.z <= z0) resolvedZ = z0;
+        else if (player.x <= x0) resolvedX = x0;
+        else if (player.x >= x1) resolvedX = x1;
+        else {
+          const candidates = [
+            {axis:'x',value:x0,d:Math.abs(resolvedX-x0)},
+            {axis:'x',value:x1,d:Math.abs(resolvedX-x1)},
+            {axis:'z',value:z0,d:Math.abs(resolvedZ-z0)},
+            {axis:'z',value:z1,d:Math.abs(resolvedZ-z1)}
+          ].sort((a,b)=>a.d-b.d);
+          if (candidates[0].axis === 'x') resolvedX = candidates[0].value;
+          else resolvedZ = candidates[0].value;
+        }
+      }
+    }
+
+    // Límite único e invisible de profundidad del Estudio.
+    // La barrera ocupa toda la anchura de la habitación, por lo que no
+    // depende de la posición ni del tamaño de ningún mueble concreto.
+    // En este sistema, z menor significa avanzar hacia el fondo.
+    if (activeRoom.studyDepthLimit !== undefined && resolvedZ < activeRoom.studyDepthLimit) {
+      resolvedZ = activeRoom.studyDepthLimit;
+    }
+
+    // En el Dormitorio, la pila de libros y el aparador con calavera
+    // funcionan como obstáculos sólidos. El personaje puede rodearlos por
+    // los laterales, pero nunca atravesarlos.
+    if (activeRoom.bedroomFurnitureCollisions) {
+      const characterHalfWidth = Math.max(0.28, CHARACTER_WIDTH * 0.5);
+      const characterDepth = 0.20;
+
+      activeRoom.bedroomFurnitureCollisions.forEach(fc => {
+        const overlapsX =
+          resolvedX + characterHalfWidth > fc.xMin &&
+          resolvedX - characterHalfWidth < fc.xMax;
+        const overlapsZ =
+          resolvedZ + characterDepth > fc.zMin &&
+          resolvedZ - characterDepth < fc.zMax;
+
+        if (!overlapsX || !overlapsZ) return;
+
+        const fromFront = nextZ >= fc.zMax && resolvedZ < fc.zMax;
+        const fromBack = nextZ <= fc.zMin && resolvedZ > fc.zMin;
+        const fromLeft = nextX <= fc.xMin && resolvedX > fc.xMin;
+        const fromRight = nextX >= fc.xMax && resolvedX < fc.xMax;
+
+        if (fromFront) {
+          resolvedZ = fc.zMax + characterDepth;
+        } else if (fromBack) {
+          resolvedZ = fc.zMin - characterDepth;
+        } else if (fromLeft) {
+          resolvedX = fc.xMin - characterHalfWidth;
+        } else if (fromRight) {
+          resolvedX = fc.xMax + characterHalfWidth;
+        } else {
+          // Entrada diagonal: expulsar por el eje que requiera menos desplazamiento.
+          const pushLeft = Math.abs((fc.xMin - characterHalfWidth) - resolvedX);
+          const pushRight = Math.abs((fc.xMax + characterHalfWidth) - resolvedX);
+          const pushFront = Math.abs((fc.zMax + characterDepth) - resolvedZ);
+          const pushBack = Math.abs((fc.zMin - characterDepth) - resolvedZ);
+          const minPush = Math.min(pushLeft, pushRight, pushFront, pushBack);
+
+          if (minPush === pushLeft) resolvedX = fc.xMin - characterHalfWidth;
+          else if (minPush === pushRight) resolvedX = fc.xMax + characterHalfWidth;
+          else if (minPush === pushFront) resolvedZ = fc.zMax + characterDepth;
+          else resolvedZ = fc.zMin - characterDepth;
+        }
+      });
+    }
+
+    player.x = resolvedX;
+    player.z = resolvedZ;
+
+    // Si ha llegado al sofá del salón, sustituimos inmediatamente la
+    // animación de andar por la secuencia RUBIK 001..007.
+    trySitAtSofa();
+    trySitAtStudyStool();
+  }
+
+  // ─── CÁMARA DE SALA: PLANO GENERAL BASE ────────────────────
+  // Calcula el encuadre "de referencia" que muestra la sala entera a
+  // pantalla completa (sin recortar ningún lado), según el FOV de la
+  // cámara y el aspecto actual de la ventana. Es el plano de presentación
+  // con el que arranca cada sala, y también el límite de seguridad que la
+  // cámara cinematográfica nunca sobrepasa hacia afuera.
+  function computeRoomFraming(room) {
+    const aspect = camera.aspect || (window.innerWidth / window.innerHeight);
+    const vFov = camera.fov * Math.PI / 180;
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+    const distForHeight = (INTERIOR_HEIGHT / 2) / Math.tan(vFov / 2);
+    const distForWidth  = (INTERIOR_WIDTH / 2)  / Math.tan(hFov / 2);
+    const dist = Math.max(distForHeight, distForWidth) * 1.02;
+    return { cx: room.center.x, baseY: room.yMin, dist };
+  }
+
+  // Coloca la cámara directamente en el plano general (sin transición): se
+  // usa al entrar en una sala —punto de partida del plano de presentación—
+  // y al redimensionar la ventana, para que el encuadre no quede desajustado
+  // mientras se recalcula.
+  function updateStaticRoomCamera(room) {
+    const f = computeRoomFraming(room);
+    room.cineFraming = f;
+    camera.position.set(f.cx, f.baseY + INTERIOR_HEIGHT / 2, INTERIOR_DEPTH / 2 + f.dist);
+    camera.lookAt(f.cx, f.baseY + INTERIOR_HEIGHT / 2, 0);
+  }
+
+  // Parámetros del "director de fotografía" para el interior. Los factores
+  // son relativos a la distancia del plano general (1 = plano general),
+  // así que cualquier valor por debajo de 1 es un acercamiento.
+  const CINE_FOLLOW_FACTOR = 0.86;   // seguimiento normal, algo más cerca que el plano general
+  const CINE_DETAIL_FACTOR = 0.74;   // plano de detalle (proximidad al sofá / sentarse)
+  const CINE_PAN_MAX = INTERIOR_WIDTH * 0.16; // paneo lateral máx. (tercios): nunca deja ver fuera de la sala
+  const CINE_ESTABLISH_DUR = 1.55;   // segundos del plano de presentación al entrar
+  const CINE_CLOSEUP_DUR = 2.1;      // segundos que dura un plano de detalle forzado
+
+  // Cámara "viva" del interior: parte del plano general (ver enterRoom) y
+  // se desliza suavemente hacia un plano de seguimiento con composición por
+  // tercios, con acercamientos discretos cerca de elementos interactivos y
+  // temblor de operador sostenido a mano. Todo se resuelve por interpolación
+  // exponencial (independiente del framerate), así que nunca hay cortes.
+  function updateInteriorCinematicCamera(room, dtMs) {
+    const f = room.cineFraming || computeRoomFraming(room);
+    const midY = f.baseY + INTERIOR_HEIGHT / 2;
+    const t = cineTime;
+
+    // Progreso del plano de presentación: 0 = plano general recién entrado,
+    // 1 = seguimiento normal ya asentado.
+    const establishE = easeInOutCubic(clamp((t - roomEnterTime) / CINE_ESTABLISH_DUR, 0, 1));
+
+    // Sesgo de encuadre por regla de tercios: nos desplazamos ligeramente
+    // hacia donde camina o mira el personaje, siempre dentro de la sala.
+    const dirSign = player.direction === 'left' ? -1 : player.direction === 'right' ? 1 : 0;
+    const movingBias = player.state === 'walking' ? 1 : 0.45;
+    const panTarget = clamp(
+      (player.x - f.cx) * 0.55 + dirSign * CINE_PAN_MAX * 0.35 * movingBias,
+      -CINE_PAN_MAX, CINE_PAN_MAX
+    );
+
+    let closeFactor = lerp(1, CINE_FOLLOW_FACTOR, establishE);
+    let focusX = f.cx + panTarget * establishE;
+    let focusY = midY;
+
+    // Plano de detalle discreto al acercarse al sofá (elemento interactivo).
+    if (activeRoom && activeRoom.sofaSeat) {
+      const dx = player.x - activeRoom.sofaSeat.x;
+      const dz = player.z - activeRoom.sofaSeat.z;
+      const distToSofa = Math.hypot(dx, dz);
+      if (distToSofa < 1.35) {
+        const near = 1 - clamp(distToSofa / 1.35, 0, 1);
+        closeFactor = lerp(closeFactor, CINE_DETAIL_FACTOR, near * 0.7);
+        focusX = lerp(focusX, activeRoom.sofaSeat.x, near * 0.5);
+      }
+    }
+
+    // Momento especial: al sentarse se fuerza un plano de detalle temporal
+    // que después suelta el control de vuelta al seguimiento normal.
+    if (t < closeupUntil && closeupFocus) {
+      closeFactor = CINE_DETAIL_FACTOR;
+      focusX = lerp(focusX, closeupFocus.x, 0.85);
+      focusY = lerp(focusY, closeupFocus.y, 0.6);
+    }
+
+    // Respiración sutil de profundidad/altura: da sensación de cámara viva
+    // sin llegar nunca a un movimiento brusco.
+    const breathe = Math.sin(t * 0.35 + room.id.length);
+    const dist = clamp(f.dist * closeFactor, f.dist * CINE_DETAIL_FACTOR * 0.94, f.dist * 1.02);
+
+    _cineDesiredPos.set(
+      focusX,
+      midY + breathe * 0.012,
+      INTERIOR_DEPTH / 2 + dist + breathe * 0.02
+    );
+    _cineDesiredLook.set(focusX, focusY, 0);
+
+    // Temblor de operador sujetando la cámara a mano (capas de ruido).
+    const hh = handheldOffset(t, 0.018, 0.012, 0.01, room.id.charCodeAt(0));
+    _cineDesiredPos.x += hh.x;
+    _cineDesiredPos.y += hh.y;
+    _cineDesiredLook.x += hh.x * 0.6;
+    _cineDesiredLook.y += hh.y * 0.6;
+
+    // Nunca atravesar paredes ni acercarse más de lo previsto por el plano
+    // de detalle: la sala es una caja cerrada por tres lados, así que basta
+    // con acotar la distancia de la cámara a la franja [detalle, general].
+    const minDist = f.dist * CINE_DETAIL_FACTOR * 0.9;
+    const maxDist = f.dist * 1.04;
+    _cineDesiredPos.z = clamp(_cineDesiredPos.z, INTERIOR_DEPTH / 2 + minDist, INTERIOR_DEPTH / 2 + maxDist);
+
+    // Suavizado exponencial independiente del framerate: cada cambio de
+    // plano es un movimiento fluido, jamás un salto.
+    if (!camSmoothed.ready) {
+      camSmoothed.pos.copy(_cineDesiredPos);
+      camSmoothed.look.copy(_cineDesiredLook);
+      camSmoothed.ready = true;
+    } else {
+      const posK = 1 - Math.pow(0.0025, dtMs / 1000);
+      const lookK = 1 - Math.pow(0.006, dtMs / 1000);
+      camSmoothed.pos.lerp(_cineDesiredPos, posK);
+      camSmoothed.look.lerp(_cineDesiredLook, lookK);
+    }
+
+    camera.position.copy(camSmoothed.pos);
+    camera.lookAt(camSmoothed.look);
+  }
+
+  // La vela sí sigue al personaje (da luz cálida allá donde camine),
+  // aunque la cámara ya no lo haga.
+  function updateCandleFollow() {
+    candle.position.set(player.x, player.y + CHARACTER_HEIGHT * 0.75, player.z + 0.6);
+  }
+
+  // ─── AJUSTE RESPONSIVE ─────────────────────────────────────
+  function resizeRenderer() {
+    const width = Math.max(1, window.innerWidth || canvas.clientWidth || 680);
+    const height = Math.max(1, window.innerHeight || canvas.clientHeight || 520);
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(width, height, false);
+
+    // Mantener una ventana de render 16:9 dentro del canvas.
+    // Nunca escalamos el resultado 3D de forma independiente en X/Y:
+    // cuando el monitor tiene otra proporción aparecen bandas laterales
+    // o superior/inferior, pero la casa y la muñeca conservan su tamaño relativo.
+    const windowAspect = width / height;
+    let viewportWidth, viewportHeight, viewportX, viewportY;
+
+    if (windowAspect > DESIGN_ASPECT) {
+      viewportHeight = height;
+      viewportWidth = Math.round(height * DESIGN_ASPECT);
+      viewportX = Math.round((width - viewportWidth) / 2);
+      viewportY = 0;
+    } else {
+      viewportWidth = width;
+      viewportHeight = Math.round(width / DESIGN_ASPECT);
+      viewportX = 0;
+      viewportY = Math.round((height - viewportHeight) / 2);
+    }
+
+    renderer.setScissorTest(false);
+    renderer.setViewport(0, 0, width, height);
+    renderer.clear();
+
+    camera.aspect = DESIGN_ASPECT;
+    camera.updateProjectionMatrix();
+
+    renderer.__fixedViewport = {
+      x: viewportX,
+      y: viewportY,
+      width: viewportWidth,
+      height: viewportHeight
+    };
+
+    // La firma sigue el viewport 16:9 para quedar siempre en la tierra inferior derecha.
+    portfolioSignature.style.left = `${viewportX + viewportWidth * 0.5137}px`;
+    portfolioSignature.style.top = `${height - viewportY - viewportHeight + viewportHeight * 0.6373}px`;
+    portfolioSignature.style.width = `${viewportWidth * 0.41952}px`;
+
+    // La cámara de interior también conserva exactamente el mismo encuadre.
+    if (mode === 'interior' && activeRoom) updateStaticRoomCamera(activeRoom);
+  }
+
+  window.addEventListener('resize', resizeRenderer);
+  resizeRenderer();
+
+  // ─── BUCLE DE RENDER ────────────────────────────────────────
+  let lastFrameTime = performance.now();
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    const now = performance.now();
+    const dt = now - lastFrameTime; // ms transcurridos, para la velocidad de la animación
+    lastFrameTime = now;
+    // Reloj de la cámara cinematográfica, acotado para evitar saltos si la
+    // pestaña estuvo un momento en segundo plano.
+    cineTime += Math.min(dt, 100) / 1000;
+
+    if (transition) {
+      const t = Math.min(1, (performance.now() - transition.t0) / transition.dur);
+      const e = easeInOutCubic(t);
+      view.target.lerpVectors(transition.start.target, transition.end.target, e);
+      view.radius = lerp(transition.start.radius, transition.end.radius, e);
+      view.theta = lerp(transition.start.theta, transition.end.theta, e);
+      view.phi = lerp(transition.start.phi, transition.end.phi, e);
+      if (t >= 1) {
+        const done = transition.onDone;
+        transition = null;
+        if (done) done();
+      }
+    } else if (mode === 'exterior') {
+      view.target.copy(EXT_TARGET);
+      view.radius = 17;
+      view.theta = 0;
+      view.phi = 1.43;
+    } else if (mode === 'interior') {
+      if (!catVideoModal.classList.contains('visible') && !tartaloVideoModal.classList.contains('visible') && !salonVideoModal.classList.contains('visible') && !salonPaintingVideoModal.classList.contains('visible') && !pigVideoModal.classList.contains('visible') && !ghostVideoModal.classList.contains('visible') && !rapunzelPdfModal.classList.contains('visible')) movePlayer();
+      updateBedroomSleepSwap();
+      updateCharacterSprite();
+      updateCharacterAnimation(dt);
+      updateCandleFollow();
+      if (activeRoom) updateInteriorCinematicCamera(activeRoom, Math.min(dt, 100));
+    }
+
+    candle.intensity += (candleTarget - candle.intensity) * 0.08;
+
+    if (mode !== 'interior') {
+      // Exterior fijo: la fachada permanece completamente quieta.
+      updateCameraFromView();
+    }
+
+    // Renderizar solo dentro del viewport 16:9 calculado en resizeRenderer.
+    // El canvas sigue ocupando toda la pantalla, pero no se deforma la imagen.
+    const vp = renderer.__fixedViewport;
+    if (vp) {
+      renderer.setViewport(vp.x, vp.y, vp.width, vp.height);
+    }
+    // Sincronizar un enlace HTML real con la posición en pantalla del póster.
+    // Evita los fallos de clic sobre planos 3D inclinados y funciona con ratón y táctil.
+    if (mode === 'interior' && activeRoom && activeRoom.id === 'p1-der' && activeRoom.cemeteryPosterButton && !transition) {
+      const picture = activeRoom.cemeteryPosterButton;
+      picture.updateWorldMatrix(true, false);
+      const geom = picture.geometry.parameters;
+      const hw = geom.width / 2, hh = geom.height / 2;
+      const corners = [[-hw,-hh],[hw,-hh],[-hw,hh],[hw,hh]];
+      const vp = renderer.__fixedViewport;
+      const points = corners.map(([x,y]) => {
+        const pt = picture.localToWorld(new THREE.Vector3(x,y,0)).project(camera);
+        return {x: vp.x + (pt.x+1)*vp.width/2, y: window.innerHeight - vp.y - (pt.y+1)*vp.height/2, z:pt.z};
+      });
+      const minX = Math.min(...points.map(p=>p.x)), maxX = Math.max(...points.map(p=>p.x));
+      const minY = Math.min(...points.map(p=>p.y)), maxY = Math.max(...points.map(p=>p.y));
+      if (points.every(p=>Number.isFinite(p.x) && Number.isFinite(p.y)) && maxX-minX > 8 && maxY-minY > 8) {
+        pigStoryLink.style.display = 'block';
+        pigStoryLink.style.left = `${minX}px`;
+        pigStoryLink.style.top = `${minY}px`;
+        pigStoryLink.style.width = `${maxX-minX}px`;
+        pigStoryLink.style.height = `${maxY-minY}px`;
+      } else pigStoryLink.style.display = 'none';
+    } else pigStoryLink.style.display = 'none';
+    renderer.render(scene, camera);
+  }
+
+  updateCameraFromView();
+  animate();
+})();
+</script>
+
+<dialog id="explore-welcome" aria-labelledby="explore-welcome-title" aria-describedby="explore-welcome-instructions">
+  <h2 id="explore-welcome-title">Esta casa guarda secretos…</h2>
+  <div id="explore-welcome-instructions">
+    <p>Entra en las habitaciones y muévete con las flechas.</p>
+    <p>Pasa el ratón sobre los objetos: <strong>si aparece una calaverita, haz clic y descubre sus secretos.</strong></p>
+  </div>
+  <form method="dialog"><button type="submit" autofocus>Explorar la casita</button></form>
+</dialog>
+<script>
+(() => {
+  const welcome = document.getElementById('explore-welcome');
+  // Evita que las teclas de la bienvenida muevan al personaje o activen la casa.
+  for (const type of ['keydown', 'keyup']) {
+    window.addEventListener(type, event => {
+      if (welcome.open) event.stopImmediatePropagation();
+    }, true);
+  }
+  welcome.addEventListener('close', () => {
+    // El rótulo empieza a parpadear cuando la bienvenida deja de tapar la casa.
+    document.getElementById('portfolio-signature').classList.add('signature-started');
+    document.getElementById('c').focus?.();
+  });
+  welcome.showModal();
+})();
+</script>
