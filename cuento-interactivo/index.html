@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La entrada de los personajes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0e0a13;
+    --ink-2:#1b1220;
+    --bone:#ece3d0;
+    --candle:#d9a75a;
+    --toxic:#8fbf6b;
+    --blood:#7a2233;
+    --wood:#3d2b22;
+
+    /* ---------------------------------------------------------------
+       Posición del botón "Comenzar" sobre el vídeo de portada, en %
+       del tamaño real del vídeo (no del viewport). Valores iniciales
+       de partida: usa el modo de ajuste (icono ⚙ arriba a la derecha
+       del vídeo) para hacer clic exactamente sobre el rótulo
+       "Comenzar" y arrastrar para dimensionar la zona. La posición
+       elegida se guarda automáticamente en el navegador.
+    ----------------------------------------------------------------*/
+    --start-top: 91%;
+    --start-left: 49.3%;
+    --start-w: 18%;
+    --start-h: 8%;
+
+    /* ---------------------------------------------------------------
+       Posición de los dos botones del mando (rayo / fuego) que
+       aparecen sobre el último fotograma congelado del vídeo
+       005_INTERACCIÓN, en % del tamaño real del vídeo. Calculadas
+       directamente sobre el fotograma de referencia (1920x1080):
+       botón rayo centrado en (287.5, 428) radio 64px;
+       botón fuego centrado en (287.5, 605) radio 59px.
+    ----------------------------------------------------------------*/
+    --rayo-top: 39.63%;
+    --rayo-left: 19.6%;
+    --rayo-w: 6.67%;
+    --rayo-h: 11.85%;
+
+    --fuego-top: 56.02%;
+    --fuego-left: 19.6%;
+    --fuego-w: 6.15%;
+    --fuego-h: 10.93%;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:var(--ink);
+    font-family:'IM Fell English', serif;
+    overflow:hidden;
+  }
+
+  .screen{
+    position:fixed; inset:0;
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; visibility:hidden;
+    transition:opacity .9s ease;
+    background:var(--ink);
+  }
+  .screen.active{ opacity:1; visibility:visible; }
+
+  /* ---------- ESCENARIOS DE VÍDEO (portada y resultado) ----------
+     El aspect-ratio se fija por JS en cuanto se conocen las
+     dimensiones reales del vídeo, así que el recuadro se ajusta
+     exactamente a su proporción en vez de forzar 16:9. */
+  .stage{
+    position:relative;
+    width:100%;
+    max-width:100vw;
+    max-height:100vh;
+    aspect-ratio:16/9; /* valor de partida, se sobreescribe al cargar metadatos */
+    background:#000;
+  }
+  .stage video{
+    width:100%; height:100%;
+    object-fit:contain;
+    display:block;
+    background:#000;
+  }
+
+  .start-hit{
+    position:absolute;
+    top:var(--start-top);
+    left:var(--start-left);
+    width:var(--start-w);
+    height:var(--start-h);
+    transform:translate(-50%,-50%);
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    border-radius:6px;
+  }
+  .start-hit::after{
+    content:"";
+    position:absolute; inset:-4px;
+    border-radius:8px;
+    box-shadow:0 0 0 0 rgba(217,167,90,.55);
+    animation:pulse-ring 2.4s ease-out infinite;
+    pointer-events:none;
+  }
+  @keyframes pulse-ring{
+    0%{ box-shadow:0 0 0 0 rgba(217,167,90,.45); }
+    70%{ box-shadow:0 0 0 14px rgba(217,167,90,0); }
+    100%{ box-shadow:0 0 0 0 rgba(217,167,90,0); }
+  }
+  .start-hit.calib-mode{
+    background:rgba(217,167,90,.18);
+    outline:1px dashed rgba(217,167,90,.9);
+  }
+
+  /* ---------- Herramienta de calibración del botón "Comenzar" ---------- */
+  .calib-toggle{
+    position:absolute;
+    top:10px; right:10px;
+    z-index:5;
+    width:34px; height:34px;
+    border-radius:50%;
+    border:1px solid rgba(236,227,208,.35);
+    background:rgba(14,10,19,.55);
+    color:var(--bone);
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    opacity:.45;
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .calib-toggle:hover, .calib-toggle:focus-visible{ opacity:1; transform:rotate(35deg); }
+
+  /* ---------- Botón de sonido (arriba a la izquierda) ---------- */
+  .sound-toggle{
+    position:absolute;
+    top:10px; left:10px;
+    z-index:5;
+    width:34px; height:34px;
+    border-radius:50%;
+    border:1px solid rgba(236,227,208,.35);
+    background:rgba(14,10,19,.55);
+    color:var(--bone);
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    opacity:.7;
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .sound-toggle:hover, .sound-toggle:focus-visible{ opacity:1; transform:scale(1.08); }
+  .sound-toggle:focus-visible{ outline:3px solid var(--toxic); outline-offset:2px; }
+
+  .calib-panel{
+    position:absolute;
+    bottom:12px; left:50%;
+    transform:translateX(-50%);
+    z-index:5;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    background:rgba(14,10,19,.82);
+    border:1px solid rgba(217,167,90,.4);
+    color:var(--bone);
+    font-family:'Special Elite', serif;
+    font-size:12.5px;
+    padding:10px 14px;
+    border-radius:8px;
+    text-align:center;
+    max-width:min(92vw, 460px);
+  }
+  .calib-panel.open{ display:flex; }
+  .calib-panel .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; }
+  .calib-panel button{
+    font-family:'Special Elite', serif;
+    background:var(--wood);
+    color:var(--bone);
+    border:1px solid rgba(236,227,208,.3);
+    border-radius:5px;
+    padding:5px 10px;
+    cursor:pointer;
+  }
+  .calib-panel button.primary{ background:var(--candle); color:#241a12; border-color:transparent; }
+  .calib-panel .hint{ opacity:.75; }
+
+  /* ---------- PANTALLA 2: ELECCIÓN ---------- */
+  #s-eleccion{
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+  }
+  #s-eleccion::before{
+    content:"";
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse at center, rgba(14,10,19,0.15) 0%, rgba(14,10,19,0.72) 78%, rgba(14,10,19,0.92) 100%);
+  }
+  .veil{
+    position:relative;
+    z-index:2;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:clamp(28px,5vh,56px);
+    padding:24px;
+    text-align:center;
+  }
+  .question{
+    font-family:'Creepster', cursive;
+    color:var(--bone);
+    font-size:clamp(28px, 5.4vw, 64px);
+    letter-spacing:.03em;
+    line-height:1.15;
+    text-shadow:
+      0 0 6px rgba(143,191,107,.35),
+      0 0 22px rgba(0,0,0,.85),
+      2px 2px 0 rgba(0,0,0,.6);
+    opacity:0;
+    transform:translateY(14px);
+    animation:flicker-in 1.6s ease forwards .3s;
+    max-width:16ch;
+  }
+  @keyframes flicker-in{
+    0%{ opacity:0; transform:translateY(14px); }
+    35%{ opacity:.5; }
+    45%{ opacity:.15; }
+    55%{ opacity:.7; }
+    100%{ opacity:1; transform:translateY(0); }
+  }
+
+  .choices{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:clamp(20px,4vw,52px);
+    opacity:0;
+    animation:rise-in 1s ease forwards 1.5s;
+  }
+  @keyframes rise-in{
+    from{ opacity:0; transform:translateY(18px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .choice-btn{
+    font-family:'Special Elite', serif;
+    cursor:pointer;
+    color:var(--bone);
+    background:transparent;
+    border:none;
+    padding:0;
+  }
+  .choice-label{
+    display:block;
+    font-size:13px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:var(--candle);
+    margin-bottom:10px;
+    opacity:.85;
+  }
+
+  /* Carteles de elección — misma forma rectangular para ambas opciones,
+     solo cambia la paleta/textura para diferenciar el tono de cada una */
+  .plate{
+    width:clamp(210px,22vw,280px);
+    min-height:104px;
+    padding:24px 20px;
+    border-radius:14px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    font-size:clamp(17px,1.9vw,21px);
+    letter-spacing:.02em;
+    transition:transform .25s ease, box-shadow .25s ease, filter .25s ease;
+  }
+  .plate::before{
+    display:block;
+    font-size:17px;
+    margin-bottom:10px;
+  }
+
+  /* A) Entrada épica — dorada, ceremonial */
+  .btn-epica .plate{
+    background:linear-gradient(180deg,#241a2c,#150f1a);
+    border:2px solid var(--candle);
+    box-shadow:
+      inset 0 0 0 1px rgba(217,167,90,.25),
+      0 0 18px rgba(217,167,90,.25),
+      0 10px 24px rgba(0,0,0,.6);
+  }
+  .btn-epica .plate::before{
+    content:"✦";
+    color:var(--candle);
+  }
+  .btn-epica:hover .plate, .btn-epica:focus-visible .plate{
+    transform:translateY(-6px);
+    box-shadow:
+      inset 0 0 0 1px rgba(217,167,90,.4),
+      0 0 30px rgba(217,167,90,.45),
+      0 14px 28px rgba(0,0,0,.65);
+  }
+
+  /* B) Entrada pardilla — madera desgastada, más terrosa */
+  .btn-pardilla .plate{
+    background:
+      repeating-linear-gradient(90deg, #4a352a 0 4px, #3d2b22 4px 8px);
+    border:2px solid #2a1c15;
+    color:#e8dcc8;
+    filter:saturate(.8);
+    box-shadow:0 10px 24px rgba(0,0,0,.6);
+  }
+  .btn-pardilla .plate::before{
+    content:"—";
+    color:#a9977f;
+  }
+  .btn-pardilla:hover .plate, .btn-pardilla:focus-visible .plate{
+    transform:translateY(-6px);
+    filter:saturate(1);
+    box-shadow:0 14px 28px rgba(0,0,0,.65);
+  }
+
+  .choice-btn:focus-visible{ outline:3px solid var(--toxic); outline-offset:6px; border-radius:8px; }
+  .start-hit:focus-visible{ outline:3px solid var(--candle); outline-offset:2px; }
+
+  /* ---------- Acciones tras el vídeo de resultado ---------- */
+  .post-video-actions{
+    position:absolute;
+    left:50%;
+    bottom:6%;
+    transform:translateX(-50%) translateY(10px);
+    z-index:4;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:16px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .6s ease, transform .6s ease;
+  }
+  .post-video-actions.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+    pointer-events:auto;
+  }
+  .post-btn{
+    font-family:'Special Elite', serif;
+    cursor:pointer;
+    color:var(--bone);
+    background:rgba(14,10,19,.72);
+    border:2px solid rgba(217,167,90,.55);
+    border-radius:10px;
+    padding:12px 26px;
+    font-size:clamp(14px,1.5vw,17px);
+    letter-spacing:.05em;
+    backdrop-filter:blur(2px);
+    transition:transform .2s ease, background .2s ease, border-color .2s ease;
+  }
+  .post-btn:hover, .post-btn:focus-visible{
+    transform:translateY(-3px);
+    background:rgba(14,10,19,.9);
+    border-color:var(--candle);
+  }
+  .post-btn.primary{
+    background:linear-gradient(180deg,#caa15c,#a97e3a);
+    color:#231a10;
+    border-color:transparent;
+  }
+  .post-btn.primary:hover, .post-btn.primary:focus-visible{
+    background:linear-gradient(180deg,#dab26a,#b98c45);
+  }
+  .post-btn:focus-visible{ outline:3px solid var(--toxic); outline-offset:3px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .post-video-actions{ transition:none; }
+  }
+
+  /* ---------- Elección "mando" (rayo / fuego) sobre el fotograma final
+     del vídeo 005_INTERACCIÓN. Reutiliza .question (misma tipografía y
+     forma de presentar la pregunta que la elección inicial) y el mismo
+     lenguaje visual del punto interactivo calibrado (.start-hit / pulse-ring). ---------- */
+  .mando-eleccion{
+    display:none;
+    position:absolute; inset:0;
+    z-index:3;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    padding-top:1.5%;
+    pointer-events:none;
+  }
+  .mando-eleccion.show{ display:flex; }
+  .mando-eleccion .question{ pointer-events:none; }
+
+  .mando-hit{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    pointer-events:auto;
+  }
+  .mando-hit::after{
+    content:"";
+    position:absolute; inset:-6px;
+    border-radius:50%;
+    box-shadow:0 0 0 0 rgba(217,167,90,.55);
+    animation:pulse-ring 2.4s ease-out infinite;
+    pointer-events:none;
+  }
+  #btn-rayo{ top:var(--rayo-top); left:var(--rayo-left); width:var(--rayo-w); height:var(--rayo-h); }
+  #btn-fuego{ top:var(--fuego-top); left:var(--fuego-left); width:var(--fuego-w); height:var(--fuego-h); }
+  #btn-rayo:focus-visible, #btn-fuego:focus-visible{ outline:3px solid var(--candle); outline-offset:3px; border-radius:50%; }
+
+  /* motas flotando, atmósfera sutil */
+  .motes{ position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+  .mote{
+    position:absolute;
+    width:3px; height:3px;
+    background:rgba(143,191,107,.55);
+    border-radius:50%;
+    filter:blur(1px);
+    animation:drift linear infinite;
+  }
+  @keyframes drift{
+    from{ transform:translateY(0) translateX(0); opacity:0; }
+    10%{ opacity:.8; }
+    90%{ opacity:.5; }
+    to{ transform:translateY(-40vh) translateX(20px); opacity:0; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .question, .choices, .mote, .start-hit::after, .mando-hit::after{ animation:none !important; }
+    .question{ opacity:1; transform:none; }
+    .choices{ opacity:1; transform:none; }
+  }
+
+  /* ---------- PANTALLA 4: CARTEL ESTILO INTERTÍTULO DE CINE MUDO ---------- */
+  #s-cartel{ background:var(--ink); }
+  .cartel-wrap{
+    position:relative;
+    z-index:2;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:clamp(28px,5vh,48px);
+    padding:24px;
+    text-align:center;
+  }
+  .cartel-card{
+    max-width:min(78vw, 720px);
+    padding:clamp(28px,5vw,56px) clamp(24px,4vw,48px);
+    background:var(--ink-2);
+    border:3px double var(--candle);
+    box-shadow:
+      inset 0 0 0 1px rgba(217,167,90,.25),
+      0 0 40px rgba(0,0,0,.75);
+    opacity:0;
+    transform:translateY(14px);
+    animation:flicker-in 1.6s ease forwards .2s;
+  }
+  .cartel-text{
+    margin:0;
+    font-family:'IM Fell English', serif;
+    font-style:italic;
+    color:var(--bone);
+    font-size:clamp(17px, 2.4vw, 26px);
+    line-height:1.5;
+    letter-spacing:.02em;
+    text-shadow:0 0 10px rgba(0,0,0,.6);
+  }
+  .cartel-actions{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:16px;
+    opacity:0;
+    animation:rise-in 1s ease forwards 1.2s;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .cartel-card, .cartel-actions{ animation:none !important; opacity:1; transform:none; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- PANTALLA 1 · PORTADA -->
+  <section class="screen active" id="s-portada">
+    <div class="stage" id="stage-portada">
+      <video id="video-portada" src="https://res.cloudinary.com/dslosjjeb/video/upload/v1784805838/000_PORTADA_SIN_MARCA_DE_AGUA_tihoah.mp4" autoplay muted playsinline loop></video>
+      <button class="start-hit" id="btn-comenzar" aria-label="Comenzar"></button>
+      <button class="sound-toggle" id="sound-toggle" title="Activar sonido" aria-label="Activar sonido">🔇</button>
+      <button class="calib-toggle" id="calib-toggle" title="Ajustar posición del botón Comenzar" aria-label="Ajustar posición del botón Comenzar">⚙</button>
+      <div class="calib-panel" id="calib-panel">
+        <div class="hint">Modo ajuste: haz clic exactamente sobre el texto «Comenzar» del vídeo para fijar el centro del botón.</div>
+        <div class="row">
+          <span>Ancho</span>
+          <button data-adjust="w" data-delta="-2">–</button>
+          <button data-adjust="w" data-delta="2">+</button>
+          <span>Alto</span>
+          <button data-adjust="h" data-delta="-1">–</button>
+          <button data-adjust="h" data-delta="1">+</button>
+        </div>
+        <div class="row">
+          <button id="calib-save" class="primary">Guardar posición</button>
+          <button id="calib-close">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANTALLA 2 · ELECCIÓN -->
+  <section class="screen" id="s-eleccion" aria-hidden="true">
+    <div class="motes" id="motes"></div>
+    <div class="veil">
+      <h1 class="question">¿Cómo quieres<br>que entren los personajes?</h1>
+      <div class="choices">
+        <button class="choice-btn btn-epica" id="btn-epica">
+          <span class="choice-label">Opción A</span>
+          <span class="plate">Entrada épica</span>
+        </button>
+        <button class="choice-btn btn-pardilla" id="btn-pardilla">
+          <span class="choice-label">Opción B</span>
+          <span class="plate">Entrada pardilla</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANTALLA 3 · RESULTADO -->
+  <section class="screen" id="s-resultado" aria-hidden="true">
+    <div class="stage" id="stage-resultado">
+      <video id="video-resultado" playsinline></video>
+      <button class="post-btn primary" id="reanudar-video" hidden style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20">▶ Reproducir</button>
+      <div class="post-video-actions" id="post-video-actions">
+        <button class="post-btn" id="btn-volver-inicio">↺ Volver al inicio</button>
+        <button class="post-btn primary" id="btn-continuar">Volver a la casita 🏠</button>
+      </div>
+      <!-- Elección "mando" (rayo / fuego): aparece sobre el último fotograma congelado
+           del vídeo 005_INTERACCIÓN al terminar éste. Reutiliza la misma tipografía/estilo
+           de pregunta que la pantalla de elección inicial (clase .question). -->
+      <div class="mando-eleccion" id="mando-eleccion" aria-hidden="true">
+        <h1 class="question">¿Cómo prefieres<br>solucionar este problema?</h1>
+        <button class="mando-hit" id="btn-rayo" aria-label="Elegir el rayo"></button>
+        <button class="mando-hit" id="btn-fuego" aria-label="Elegir el fuego"></button>
+      </div>
+      <!-- Botón "Continuar" tras el vídeo del rayo o el de la llama: solo visible cuando
+           ese vídeo ha terminado. Reutiliza exactamente las mismas clases que el resto
+           de botones "Continuar" del proyecto (post-video-actions / post-btn primary). -->
+      <div class="post-video-actions" id="continuar-final-actions">
+        <button class="post-btn primary" id="btn-continuar-final">Continuar ➔</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANTALLA 4 · CARTEL (intertítulo estilo cine mudo) -->
+  <section class="screen" id="s-cartel" aria-hidden="true">
+    <div class="cartel-wrap">
+      <div class="cartel-card">
+        <p class="cartel-text">Sibille y Poewee miraron a su alrededor y descubrieron que el cementerio donde tanto les gustaba jugar y pasear estaba ahora cubierto de basura por culpa de personas poco cívicas. Decidieron que había llegado el momento de devolverle su antiguo esplendor.</p>
+      </div>
+      <div class="cartel-actions">
+        <button class="post-btn" id="btn-cartel-volver">↺ Volver al principio</button>
+        <button class="post-btn primary" id="btn-cartel-continuar">Continuar ➔</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANTALLA 5 · CARTEL 2 (intertítulo tras el minijuego, misma estética que el cartel anterior) -->
+  <section class="screen" id="s-cartel2" aria-hidden="true">
+    <div class="cartel-wrap">
+      <div class="cartel-card">
+        <p class="cartel-text">Pero no todo iba a ser tan fácil... Entre las sombras de las lápidas, unos ojos observaban en silencio a Sibille y Poewee. Algo — o alguien — seguía rondando el cementerio, y su amenaza aún no había terminado.</p>
+      </div>
+      <div class="cartel-actions">
+        <button class="post-btn primary" id="btn-cartel2-continuar">Continuar ➔</button>
+      </div>
+    </div>
+  </section>
+
+<script>
+  const screens = {
+    portada: document.getElementById('s-portada'),
+    eleccion: document.getElementById('s-eleccion'),
+    resultado: document.getElementById('s-resultado'),
+    cartel: document.getElementById('s-cartel'),
+    cartel2: document.getElementById('s-cartel2'),
+  };
+
+  const videoPortada = document.getElementById('video-portada');
+  const videoResultado = document.getElementById('video-resultado');
+  const reanudarVideo = document.getElementById('reanudar-video');
+  function reproducirResultado(){
+    reanudarVideo.hidden = true;
+    videoResultado.play().catch(() => { reanudarVideo.hidden = false; });
+  }
+  reanudarVideo.addEventListener('click', reproducirResultado);
+  videoResultado.addEventListener('playing', () => { reanudarVideo.hidden = true; });
+  const stagePortada = document.getElementById('stage-portada');
+  const stageResultado = document.getElementById('stage-resultado');
+
+  const SRC = {
+    epica: 'https://res.cloudinary.com/dslosjjeb/video/upload/v1784805845/001_ENTRADA_%C3%89PICA_SIN_MARCA_DE_AGUA_ghv6gz.mp4',
+    pardilla: 'https://res.cloudinary.com/dslosjjeb/video/upload/v1784805853/001_ENTRADA_PARDILLA_AUDIO_SIN_MARCA_DE_AGUA_veyx0u.mp4'
+  };
+
+  // Vídeo que arranca al pulsar "Continuar" en el cartel de intertítulo
+  const SRC_ANTES_DEL_JUEGO = 'https://res.cloudinary.com/dslosjjeb/video/upload/v1784805860/002_ANTES_DEL_JUEGO_SIN_MARCA_DE_AGUA_prlmnk.mp4';
+
+  // Vídeo que arranca al pulsar "Continuar" en el cartel posterior al minijuego
+  const SRC_HOMBRE_PANUELO = 'https://res.cloudinary.com/dslosjjeb/video/upload/v1784805876/004_HOMBRE_PA%C3%91UELO_SIN_MARCA_DE_AGUA_diqy16.mp4';
+
+  // Vídeo que arranca automáticamente al terminar el del hombre del pañuelo
+  const SRC_INTERACCION = 'https://res.cloudinary.com/dslosjjeb/video/upload/v1784808171/005_INTERACCI%C3%93N_SIN_MARCA_AGUA_fekd1z.mp4';
+
+  // Vídeos de los dos caminos de la elección del mando (rayo / fuego)
+  const SRC_RAYO = 'https://res.cloudinary.com/dslosjjeb/video/upload/v1784878347/006_RAYO_SIN_MARCA_DE_AGUA_q7gmni.mp4';
+  const SRC_FUEGO = 'https://res.cloudinary.com/dslosjjeb/video/upload/v1784878340/006_QUEMADO_VIVO_SIN_MARCA_DE_AGUA_ewu4pj.mp4';
+
+  // Vídeo final, al que llegan ambos caminos (rayo o fuego) al pulsar "Continuar"
+  const SRC_FINAL = 'https://res.cloudinary.com/dslosjjeb/video/upload/v1787319552/V%C3%8DDEO_FINAL_TIPOG_3_sdzyxl.mp4';
+
+  document.getElementById('s-eleccion').style.backgroundImage =
+    "url('https://res.cloudinary.com/dslosjjeb/image/upload/v1783617957/FONDO_SIN_CANDADO_vg66uc.png')";
+
+  // Ajusta el recuadro del vídeo a su proporción real (no fuerza 16:9)
+  function matchVideoRatio(video, stage){
+    function apply(){
+      if(video.videoWidth && video.videoHeight){
+        stage.style.aspectRatio = video.videoWidth + ' / ' + video.videoHeight;
+      }
+    }
+    if(video.readyState >= 1) apply();
+    video.addEventListener('loadedmetadata', apply);
+  }
+  matchVideoRatio(videoPortada, stagePortada);
+  matchVideoRatio(videoResultado, stageResultado);
+
+  function goTo(name){
+    Object.values(screens).forEach(s => { s.classList.remove('active'); s.setAttribute('aria-hidden','true'); });
+    screens[name].classList.add('active');
+    screens[name].removeAttribute('aria-hidden');
+  }
+
+  // motas flotantes en la pantalla de elección
+  const motesWrap = document.getElementById('motes');
+  for(let i=0;i<26;i++){
+    const m = document.createElement('span');
+    m.className = 'mote';
+    m.style.left = Math.random()*100 + '%';
+    m.style.bottom = (-5 - Math.random()*10) + '%';
+    m.style.animationDuration = (6 + Math.random()*8) + 's';
+    m.style.animationDelay = (Math.random()*8) + 's';
+    motesWrap.appendChild(m);
+  }
+
+  const soundToggle = document.getElementById('sound-toggle');
+
+  function updateSoundIcon(){
+    const isMuted = videoPortada.muted;
+    soundToggle.textContent = isMuted ? '🔇' : '🔊';
+    soundToggle.title = isMuted ? 'Activar sonido' : 'Silenciar';
+    soundToggle.setAttribute('aria-label', isMuted ? 'Activar sonido' : 'Silenciar');
+  }
+  updateSoundIcon();
+
+  soundToggle.addEventListener('click', () => {
+    videoPortada.muted = !videoPortada.muted;
+    if(!videoPortada.muted) videoPortada.volume = 1;
+    updateSoundIcon();
+  });
+
+  document.getElementById('btn-comenzar').addEventListener('click', (e) => {
+    if(calibrating) return; // en modo ajuste el clic coloca el botón, no avanza
+    // Primera interacción del usuario: desbloquea el audio del vídeo de portada
+    // (se cargó con "muted" para que el navegador permitiera el autoplay inicial).
+    videoPortada.muted = false;
+    videoPortada.volume = 1;
+    updateSoundIcon();
+    videoPortada.pause();
+    goTo('eleccion');
+  });
+
+  const postActions = document.getElementById('post-video-actions');
+
+  function playChoice(key){
+    postActions.classList.remove('show');
+    ultimoVideoEsEntrada = true;
+    esVideoFinalTrasCartel2 = false;
+    esVideoInteraccion = false;
+    esVideoRayoOFuego = false;
+    esVideoFinalDefinitivo = false;
+    document.getElementById('mando-eleccion').classList.remove('show');
+    document.getElementById('continuar-final-actions').classList.remove('show');
+    videoResultado.src = SRC[key];
+    // Refuerza que el vídeo de resultado nunca herede un estado silenciado
+    videoResultado.muted = false;
+    videoResultado.volume = 1;
+    goTo('resultado');
+    reproducirResultado();
+  }
+
+  // Al terminar el vídeo de entrada elegido, aparece el cartel de intertítulo.
+  // (El vídeo "antes del juego" que arranca desde el cartel no debe reabrir el cartel al terminar).
+  let ultimoVideoEsEntrada = true;
+  let esVideoFinalTrasCartel2 = false;
+  let esVideoInteraccion = false;
+  let esVideoRayoOFuego = false;
+  let esVideoFinalDefinitivo = false;
+  const mandoEleccion = document.getElementById('mando-eleccion');
+  const continuarFinalActions = document.getElementById('continuar-final-actions');
+  videoResultado.addEventListener('ended', () => {
+    if(ultimoVideoEsEntrada){
+      goTo('cartel');
+    } else if(esVideoFinalTrasCartel2){
+      // Al terminar el vídeo del hombre del pañuelo, arranca automáticamente el vídeo de interacción
+      esVideoFinalTrasCartel2 = false;
+      esVideoInteraccion = true;
+      videoResultado.src = SRC_INTERACCION;
+      videoResultado.muted = false;
+      videoResultado.volume = 1;
+      goTo('resultado');
+      reproducirResultado();
+    } else if(esVideoInteraccion){
+      // Al terminar el vídeo de interacción, aparece la elección del mando (rayo / fuego)
+      // sobre su último fotograma, que queda congelado en pantalla.
+      mandoEleccion.classList.add('show');
+    } else if(esVideoRayoOFuego){
+      // Al terminar el vídeo del rayo o el de la llama, aparece el botón "Continuar"
+      // (nunca durante la reproducción, solo cuando el vídeo ha terminado).
+      esVideoRayoOFuego = false;
+      continuarFinalActions.classList.add('show');
+    } else if(esVideoFinalDefinitivo){
+      // El final permite volver a la casita o empezar el cuento de nuevo.
+      postActions.classList.add('show');
+    } else {
+      // Al terminar "Antes del juego" se carga automáticamente el minijuego (cementerio-sibille/index.html)
+      window.location.href = 'cementerio-sibille/index.html';
+    }
+  });
+
+  // Elección del mando: dos eventos independientes ('rayo' y 'fuego'), cada uno
+  // arranca su propio vídeo sin tocar el resto de la pantalla.
+  function elegirRayo(){
+    document.dispatchEvent(new CustomEvent('eleccion:rayo'));
+    mandoEleccion.classList.remove('show');
+    continuarFinalActions.classList.remove('show');
+    ultimoVideoEsEntrada = false;
+    esVideoFinalTrasCartel2 = false;
+    esVideoInteraccion = false;
+    esVideoFinalDefinitivo = false;
+    esVideoRayoOFuego = true;
+    videoResultado.src = SRC_RAYO;
+    videoResultado.muted = false;
+    videoResultado.volume = 1;
+    goTo('resultado');
+    reproducirResultado();
+  }
+  function elegirFuego(){
+    document.dispatchEvent(new CustomEvent('eleccion:fuego'));
+    mandoEleccion.classList.remove('show');
+    continuarFinalActions.classList.remove('show');
+    ultimoVideoEsEntrada = false;
+    esVideoFinalTrasCartel2 = false;
+    esVideoInteraccion = false;
+    esVideoFinalDefinitivo = false;
+    esVideoRayoOFuego = true;
+    videoResultado.src = SRC_FUEGO;
+    videoResultado.muted = false;
+    videoResultado.volume = 1;
+    goTo('resultado');
+    reproducirResultado();
+  }
+  document.getElementById('btn-rayo').addEventListener('click', elegirRayo);
+  document.getElementById('btn-fuego').addEventListener('click', elegirFuego);
+
+  // Botón "Continuar" tras el vídeo del rayo o el de la llama: ambos caminos
+  // terminan exactamente en el mismo vídeo final.
+  document.getElementById('btn-continuar-final').addEventListener('click', () => {
+    continuarFinalActions.classList.remove('show');
+    esVideoRayoOFuego = false;
+    esVideoFinalDefinitivo = true;
+    videoResultado.src = SRC_FINAL;
+    videoResultado.muted = false;
+    videoResultado.volume = 1;
+    goTo('resultado');
+    reproducirResultado();
+  });
+
+  document.getElementById('btn-epica').addEventListener('click', () => playChoice('epica'));
+  document.getElementById('btn-pardilla').addEventListener('click', () => playChoice('pardilla'));
+
+  // Botón "Volver al inicio": reinicia la portada y oculta los botones de acción
+  document.getElementById('btn-volver-inicio').addEventListener('click', () => {
+    postActions.classList.remove('show');
+    videoResultado.pause();
+    videoResultado.currentTime = 0;
+    goTo('portada');
+    videoPortada.currentTime = 0;
+    videoPortada.play().catch(()=>{});
+  });
+
+  // Regreso al portfolio al terminar el cuento.
+  document.getElementById('btn-continuar').addEventListener('click', () => {
+    window.location.href = '../index.html';
+  });
+
+  // Botón "Continuar" del cartel de intertítulo: arranca el vídeo "antes del juego"
+  document.getElementById('btn-cartel-continuar').addEventListener('click', () => {
+    ultimoVideoEsEntrada = false;
+    videoResultado.src = SRC_ANTES_DEL_JUEGO;
+    videoResultado.muted = false;
+    videoResultado.volume = 1;
+    goTo('resultado');
+    reproducirResultado();
+  });
+
+  // Botón "Volver al principio" del cartel: regresa a la portada igual que el botón equivalente anterior
+  document.getElementById('btn-cartel-volver').addEventListener('click', () => {
+    postActions.classList.remove('show');
+    videoResultado.pause();
+    videoResultado.currentTime = 0;
+    goTo('portada');
+    videoPortada.currentTime = 0;
+    videoPortada.play().catch(()=>{});
+  });
+
+  // Botón "Continuar" del cartel posterior al minijuego: arranca el vídeo del hombre del pañuelo
+  document.getElementById('btn-cartel2-continuar').addEventListener('click', () => {
+    ultimoVideoEsEntrada = false;
+    esVideoFinalTrasCartel2 = true;
+    videoResultado.src = SRC_HOMBRE_PANUELO;
+    videoResultado.muted = false;
+    videoResultado.volume = 1;
+    goTo('resultado');
+    reproducirResultado();
+  });
+
+  // Si se llega desde el minijuego pulsando "Continuar" (cementerio-sibille/index.html
+  // redirige aquí con ?scene=cartel2), se muestra directamente el cartel posterior al juego.
+  if(new URLSearchParams(window.location.search).get('scene') === 'cartel2'){
+    videoPortada.pause();
+    goTo('cartel2');
+  }
+
+  /* ---------------- Calibración del botón "Comenzar" ---------------- */
+  const root = document.documentElement;
+  const startHit = document.getElementById('btn-comenzar');
+  const calibToggle = document.getElementById('calib-toggle');
+  const calibPanel = document.getElementById('calib-panel');
+  let calibrating = false;
+
+  // Restaurar posición guardada previamente en este navegador, si existe
+  try{
+    const saved = JSON.parse(localStorage.getItem('comenzar-pos') || 'null');
+    if(saved){
+      root.style.setProperty('--start-top', saved.top + '%');
+      root.style.setProperty('--start-left', saved.left + '%');
+      root.style.setProperty('--start-w', saved.w + '%');
+      root.style.setProperty('--start-h', saved.h + '%');
+    }
+  }catch(e){}
+
+  function setCalibrating(on){
+    calibrating = on;
+    startHit.classList.toggle('calib-mode', on);
+    calibPanel.classList.toggle('open', on);
+  }
+
+  calibToggle.addEventListener('click', () => setCalibrating(!calibrating));
+  document.getElementById('calib-close').addEventListener('click', () => setCalibrating(false));
+
+  document.getElementById('calib-save').addEventListener('click', () => {
+    const top = parseFloat(getComputedStyle(root).getPropertyValue('--start-top'));
+    const left = parseFloat(getComputedStyle(root).getPropertyValue('--start-left'));
+    const w = parseFloat(getComputedStyle(root).getPropertyValue('--start-w'));
+    const h = parseFloat(getComputedStyle(root).getPropertyValue('--start-h'));
+    localStorage.setItem('comenzar-pos', JSON.stringify({top, left, w, h}));
+    setCalibrating(false);
+  });
+
+  // Clic dentro del vídeo, en modo ajuste, recoloca el centro del botón
+  stagePortada.addEventListener('click', (e) => {
+    if(!calibrating) return;
+    if(e.target === calibToggle || e.target === soundToggle || calibPanel.contains(e.target)) return;
+    const rect = stagePortada.getBoundingClientRect();
+    const leftPct = ((e.clientX - rect.left) / rect.width) * 100;
+    const topPct = ((e.clientY - rect.top) / rect.height) * 100;
+    root.style.setProperty('--start-left', leftPct.toFixed(2) + '%');
+    root.style.setProperty('--start-top', topPct.toFixed(2) + '%');
+  });
+
+  // Botones +/- de ancho y alto dentro del panel de ajuste
+  calibPanel.querySelectorAll('[data-adjust]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const prop = btn.dataset.adjust === 'w' ? '--start-w' : '--start-h';
+      const current = parseFloat(getComputedStyle(root).getPropertyValue(prop));
+      const next = Math.max(4, current + parseFloat(btn.dataset.delta));
+      root.style.setProperty(prop, next + '%');
+    });
+  });
+</script>
+</body>
+</html>

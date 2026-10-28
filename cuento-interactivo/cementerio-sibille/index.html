@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sibille y el Cementerio Limpio</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="game-container">
+
+    <div id="hud">
+      <div id="hud-trash" class="hud-box">
+        <span class="hud-label">Basura restante</span>
+        <span id="hud-trash-value" class="hud-value">0</span>
+      </div>
+      <div id="hud-score" class="hud-box">
+        <span class="hud-label">Puntuación</span>
+        <span id="hud-score-value" class="hud-value">0</span>
+      </div>
+    </div>
+
+    <button id="skip-button" title="Saltar el minijuego y continuar la historia">Saltar juego ⏭</button>
+
+    <canvas id="game-canvas" width="1672" height="941"></canvas>
+
+    <div id="loading-screen">
+      <div id="loading-box">
+        <h1>Sibille</h1>
+        <p>y el Cementerio Limpio</p>
+        <div id="loading-bar-track">
+          <div id="loading-bar-fill"></div>
+        </div>
+        <span id="loading-text">Cargando recursos... 0%</span>
+      </div>
+    </div>
+
+    <div id="end-screen" class="hidden">
+      <div id="end-box">
+        <h2>Cementerio limpio</h2>
+        <p>¡Muy bien! Has reciclado toda la basura y el cementerio vuelve a estar limpio. ¡Continúa para descubrir cómo termina la historia!</p>
+        <p id="end-score"></p>
+        <div id="end-actions">
+          <button id="home-button">↺ Volver al inicio</button>
+          <button id="restart-button">Jugar otra vez</button>
+          <button id="continue-button">Continuar ➔</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script src="game.js"></script>
+</body>
+</html>

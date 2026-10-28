@@ -1,0 +1,513 @@
+[
+  {
+    "occurrence": 1,
+    "mime": "png",
+    "path": "general/fondo-casa-halloween.png",
+    "duplicate_of": null,
+    "bytes": 1798756
+  },
+  {
+    "occurrence": 2,
+    "mime": "jpeg",
+    "path": "general/suelo-interior.jpg",
+    "duplicate_of": null,
+    "bytes": 134321
+  },
+  {
+    "occurrence": 3,
+    "mime": "png",
+    "path": "salon/papel-pintado-gotico-salon.png",
+    "duplicate_of": null,
+    "bytes": 2386514
+  },
+  {
+    "occurrence": 4,
+    "mime": "png",
+    "path": "dormitorio/papel-pintado-morado-dormitorio.png",
+    "duplicate_of": null,
+    "bytes": 2573632
+  },
+  {
+    "occurrence": 5,
+    "mime": "png",
+    "path": "estudio/papel-pintado-verde-estudio.png",
+    "duplicate_of": null,
+    "bytes": 2615955
+  },
+  {
+    "occurrence": 6,
+    "mime": "png",
+    "path": "salon/sofa-gotico.png",
+    "duplicate_of": null,
+    "bytes": 820145
+  },
+  {
+    "occurrence": 7,
+    "mime": "png",
+    "path": "cocina/mueble-cocina-gotico.png",
+    "duplicate_of": null,
+    "bytes": 2171123
+  },
+  {
+    "occurrence": 8,
+    "mime": "png",
+    "path": "estudio/mobiliario-estudio.png",
+    "duplicate_of": null,
+    "bytes": 915509
+  },
+  {
+    "occurrence": 9,
+    "mime": "png",
+    "path": "personaje/reposo/idle-frontal-01.png",
+    "duplicate_of": null,
+    "bytes": 139511
+  },
+  {
+    "occurrence": 10,
+    "mime": "png",
+    "path": "personaje/reposo/idle-frontal-02.png",
+    "duplicate_of": null,
+    "bytes": 139327
+  },
+  {
+    "occurrence": 11,
+    "mime": "png",
+    "path": "personaje/reposo/idle-frontal-03.png",
+    "duplicate_of": null,
+    "bytes": 139247
+  },
+  {
+    "occurrence": 12,
+    "mime": "png",
+    "path": "personaje/reposo/idle-frontal-04.png",
+    "duplicate_of": null,
+    "bytes": 142857
+  },
+  {
+    "occurrence": 13,
+    "mime": "png",
+    "path": "personaje/salon-sentarse/sentar-sofa-01.png",
+    "duplicate_of": null,
+    "bytes": 430513
+  },
+  {
+    "occurrence": 14,
+    "mime": "png",
+    "path": "personaje/salon-sentarse/sentar-sofa-02.png",
+    "duplicate_of": null,
+    "bytes": 463681
+  },
+  {
+    "occurrence": 15,
+    "mime": "png",
+    "path": "personaje/salon-sentarse/sentar-sofa-03.png",
+    "duplicate_of": null,
+    "bytes": 466272
+  },
+  {
+    "occurrence": 16,
+    "mime": "png",
+    "path": "personaje/salon-sentarse/sentar-sofa-02.png",
+    "duplicate_of": 14,
+    "bytes": 463681
+  },
+  {
+    "occurrence": 17,
+    "mime": "png",
+    "path": "personaje/salon-sentarse/sentar-sofa-03.png",
+    "duplicate_of": 15,
+    "bytes": 466272
+  },
+  {
+    "occurrence": 18,
+    "mime": "png",
+    "path": "personaje/salon-sentarse/sentar-sofa-06.png",
+    "duplicate_of": null,
+    "bytes": 471010
+  },
+  {
+    "occurrence": 19,
+    "mime": "png",
+    "path": "personaje/salon-sentarse/sentar-sofa-07.png",
+    "duplicate_of": null,
+    "bytes": 430513
+  },
+  {
+    "occurrence": 20,
+    "mime": "png",
+    "path": "personaje/cocina-reposo/cocina-idle-01.png",
+    "duplicate_of": null,
+    "bytes": 137379
+  },
+  {
+    "occurrence": 21,
+    "mime": "png",
+    "path": "personaje/cocina-reposo/cocina-idle-02.png",
+    "duplicate_of": null,
+    "bytes": 142375
+  },
+  {
+    "occurrence": 22,
+    "mime": "png",
+    "path": "personaje/cocina-reposo/cocina-idle-03.png",
+    "duplicate_of": null,
+    "bytes": 136420
+  },
+  {
+    "occurrence": 23,
+    "mime": "png",
+    "path": "personaje/cocina-reposo/cocina-idle-04.png",
+    "duplicate_of": null,
+    "bytes": 147135
+  },
+  {
+    "occurrence": 24,
+    "mime": "png",
+    "path": "personaje/caminar/espalda/caminar-espalda-01.png",
+    "duplicate_of": null,
+    "bytes": 99265
+  },
+  {
+    "occurrence": 25,
+    "mime": "png",
+    "path": "personaje/caminar/espalda/caminar-espalda-02.png",
+    "duplicate_of": null,
+    "bytes": 97850
+  },
+  {
+    "occurrence": 26,
+    "mime": "png",
+    "path": "personaje/caminar/espalda/caminar-espalda-03.png",
+    "duplicate_of": null,
+    "bytes": 95418
+  },
+  {
+    "occurrence": 27,
+    "mime": "png",
+    "path": "personaje/caminar/espalda/caminar-espalda-04.png",
+    "duplicate_of": null,
+    "bytes": 95113
+  },
+  {
+    "occurrence": 28,
+    "mime": "png",
+    "path": "personaje/caminar/espalda/caminar-espalda-05.png",
+    "duplicate_of": null,
+    "bytes": 98572
+  },
+  {
+    "occurrence": 29,
+    "mime": "png",
+    "path": "personaje/caminar/espalda/caminar-espalda-06.png",
+    "duplicate_of": null,
+    "bytes": 97824
+  },
+  {
+    "occurrence": 30,
+    "mime": "png",
+    "path": "personaje/caminar/espalda/caminar-espalda-07.png",
+    "duplicate_of": null,
+    "bytes": 95761
+  },
+  {
+    "occurrence": 31,
+    "mime": "png",
+    "path": "personaje/caminar/espalda/caminar-espalda-08.png",
+    "duplicate_of": null,
+    "bytes": 100176
+  },
+  {
+    "occurrence": 32,
+    "mime": "png",
+    "path": "personaje/caminar/frontal/caminar-frontal-01.png",
+    "duplicate_of": null,
+    "bytes": 153799
+  },
+  {
+    "occurrence": 33,
+    "mime": "png",
+    "path": "personaje/caminar/frontal/caminar-frontal-02.png",
+    "duplicate_of": null,
+    "bytes": 148870
+  },
+  {
+    "occurrence": 34,
+    "mime": "png",
+    "path": "personaje/caminar/frontal/caminar-frontal-03.png",
+    "duplicate_of": null,
+    "bytes": 148507
+  },
+  {
+    "occurrence": 35,
+    "mime": "png",
+    "path": "personaje/caminar/frontal/caminar-frontal-04.png",
+    "duplicate_of": null,
+    "bytes": 147901
+  },
+  {
+    "occurrence": 36,
+    "mime": "png",
+    "path": "personaje/caminar/frontal/caminar-frontal-05.png",
+    "duplicate_of": null,
+    "bytes": 149542
+  },
+  {
+    "occurrence": 37,
+    "mime": "png",
+    "path": "personaje/caminar/frontal/caminar-frontal-06.png",
+    "duplicate_of": null,
+    "bytes": 151322
+  },
+  {
+    "occurrence": 38,
+    "mime": "png",
+    "path": "personaje/caminar/frontal/caminar-frontal-07.png",
+    "duplicate_of": null,
+    "bytes": 149456
+  },
+  {
+    "occurrence": 39,
+    "mime": "png",
+    "path": "personaje/caminar/frontal/caminar-frontal-08.png",
+    "duplicate_of": null,
+    "bytes": 149901
+  },
+  {
+    "occurrence": 40,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-izquierdo/caminar-izquierda-01.png",
+    "duplicate_of": null,
+    "bytes": 135227
+  },
+  {
+    "occurrence": 41,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-izquierdo/caminar-izquierda-02.png",
+    "duplicate_of": null,
+    "bytes": 118223
+  },
+  {
+    "occurrence": 42,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-izquierdo/caminar-izquierda-03.png",
+    "duplicate_of": null,
+    "bytes": 121923
+  },
+  {
+    "occurrence": 43,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-izquierdo/caminar-izquierda-04.png",
+    "duplicate_of": null,
+    "bytes": 129396
+  },
+  {
+    "occurrence": 44,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-izquierdo/caminar-izquierda-05.png",
+    "duplicate_of": null,
+    "bytes": 133617
+  },
+  {
+    "occurrence": 45,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-izquierdo/caminar-izquierda-06.png",
+    "duplicate_of": null,
+    "bytes": 119301
+  },
+  {
+    "occurrence": 46,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-izquierdo/caminar-izquierda-07.png",
+    "duplicate_of": null,
+    "bytes": 125806
+  },
+  {
+    "occurrence": 47,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-izquierdo/caminar-izquierda-08.png",
+    "duplicate_of": null,
+    "bytes": 120966
+  },
+  {
+    "occurrence": 48,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-derecho/caminar-derecha-01.png",
+    "duplicate_of": null,
+    "bytes": 128973
+  },
+  {
+    "occurrence": 49,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-derecho/caminar-derecha-02.png",
+    "duplicate_of": null,
+    "bytes": 122176
+  },
+  {
+    "occurrence": 50,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-derecho/caminar-derecha-03.png",
+    "duplicate_of": null,
+    "bytes": 119098
+  },
+  {
+    "occurrence": 51,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-derecho/caminar-derecha-04.png",
+    "duplicate_of": null,
+    "bytes": 135160
+  },
+  {
+    "occurrence": 52,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-derecho/caminar-derecha-05.png",
+    "duplicate_of": null,
+    "bytes": 121315
+  },
+  {
+    "occurrence": 53,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-derecho/caminar-derecha-06.png",
+    "duplicate_of": null,
+    "bytes": 125668
+  },
+  {
+    "occurrence": 54,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-derecho/caminar-derecha-07.png",
+    "duplicate_of": null,
+    "bytes": 119527
+  },
+  {
+    "occurrence": 55,
+    "mime": "png",
+    "path": "personaje/caminar/perfil-derecho/caminar-derecha-08.png",
+    "duplicate_of": null,
+    "bytes": 133920
+  },
+  {
+    "occurrence": 56,
+    "mime": "png",
+    "path": "personaje/giro/giro-direccion-01.png",
+    "duplicate_of": null,
+    "bytes": 131745
+  },
+  {
+    "occurrence": 57,
+    "mime": "png",
+    "path": "personaje/giro/giro-direccion-02.png",
+    "duplicate_of": null,
+    "bytes": 92181
+  },
+  {
+    "occurrence": 58,
+    "mime": "png",
+    "path": "personaje/giro/giro-direccion-03.png",
+    "duplicate_of": null,
+    "bytes": 138603
+  },
+  {
+    "occurrence": 59,
+    "mime": "png",
+    "path": "personaje/giro/giro-direccion-04.png",
+    "duplicate_of": null,
+    "bytes": 102744
+  },
+  {
+    "occurrence": 60,
+    "mime": "png",
+    "path": "personaje/giro/giro-direccion-05.png",
+    "duplicate_of": null,
+    "bytes": 163852
+  },
+  {
+    "occurrence": 61,
+    "mime": "png",
+    "path": "personaje/giro/giro-direccion-06.png",
+    "duplicate_of": null,
+    "bytes": 176005
+  },
+  {
+    "occurrence": 62,
+    "mime": "png",
+    "path": "personaje/giro/giro-direccion-07.png",
+    "duplicate_of": null,
+    "bytes": 164101
+  },
+  {
+    "occurrence": 63,
+    "mime": "png",
+    "path": "personaje/giro/giro-direccion-08.png",
+    "duplicate_of": null,
+    "bytes": 103207
+  },
+  {
+    "occurrence": 64,
+    "mime": "png",
+    "path": "personaje/giro/giro-direccion-09.png",
+    "duplicate_of": null,
+    "bytes": 138998
+  },
+  {
+    "occurrence": 65,
+    "mime": "png",
+    "path": "personaje/giro/giro-direccion-10.png",
+    "duplicate_of": null,
+    "bytes": 92433
+  },
+  {
+    "occurrence": 66,
+    "mime": "png",
+    "path": "personaje/giro/giro-direccion-01.png",
+    "duplicate_of": 56,
+    "bytes": 131745
+  },
+  {
+    "occurrence": 67,
+    "mime": "png",
+    "path": "fachada/fachada-casa.png",
+    "duplicate_of": null,
+    "bytes": 683989
+  },
+  {
+    "occurrence": 68,
+    "mime": "png",
+    "path": "fachada/cerdo-fachada.png",
+    "duplicate_of": null,
+    "bytes": 851779
+  },
+  {
+    "occurrence": 69,
+    "mime": "png",
+    "path": "dormitorio/muebles/ataud-dormitorio.png",
+    "duplicate_of": null,
+    "bytes": 971591
+  },
+  {
+    "occurrence": 70,
+    "mime": "png",
+    "path": "dormitorio/muebles/personaje-durmiendo.png",
+    "duplicate_of": null,
+    "bytes": 456276
+  },
+  {
+    "occurrence": 71,
+    "mime": "png",
+    "path": "dormitorio/muebles/espejo-dormitorio.png",
+    "duplicate_of": null,
+    "bytes": 548217
+  },
+  {
+    "occurrence": 72,
+    "mime": "png",
+    "path": "dormitorio/muebles/libros-dormitorio.png",
+    "duplicate_of": null,
+    "bytes": 775798
+  },
+  {
+    "occurrence": 73,
+    "mime": "png",
+    "path": "dormitorio/muebles/aparador-calavera-dormitorio.png",
+    "duplicate_of": null,
+    "bytes": 711061
+  }
+]

@@ -1,0 +1,295 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=IM+Fell+English+SC&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: #0a0c08;
+  overflow: hidden;
+  font-family: 'Cinzel', serif;
+}
+
+#game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #1a1f14 0%, #050604 100%);
+}
+
+#game-canvas {
+  display: block;
+  max-width: 100vw;
+  max-height: 100vh;
+  width: auto;
+  height: auto;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  background: #000;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.9), 0 0 0 3px #1c1a14, 0 0 0 6px #443f2d;
+  cursor: default;
+}
+
+/* ---------------- HUD ---------------- */
+
+#hud {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 18px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.hud-box {
+  background: linear-gradient(180deg, rgba(30, 28, 22, 0.92), rgba(12, 11, 8, 0.92));
+  border: 2px solid #6b6142;
+  border-radius: 8px;
+  padding: 8px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 150px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.6), inset 0 0 12px rgba(255,255,255,0.03);
+}
+
+.hud-label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #b7ac82;
+  opacity: 0.85;
+}
+
+.hud-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #f3e9c9;
+  text-shadow: 0 0 8px rgba(255, 230, 150, 0.35);
+}
+
+/* ---------------- Loading screen ---------------- */
+
+#loading-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #050604;
+  transition: opacity 0.6s ease;
+}
+
+#loading-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#loading-box {
+  text-align: center;
+  color: #e9dfc0;
+  padding: 40px 60px;
+}
+
+#loading-box h1 {
+  font-family: 'IM Fell English SC', serif;
+  font-size: 52px;
+  letter-spacing: 4px;
+  color: #efe3ba;
+  text-shadow: 0 0 18px rgba(210, 190, 130, 0.4);
+}
+
+#loading-box p {
+  margin-top: 6px;
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #948a68;
+  margin-bottom: 30px;
+}
+
+#loading-bar-track {
+  width: 320px;
+  height: 10px;
+  border: 1px solid #6b6142;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #14130d;
+  margin: 0 auto;
+}
+
+#loading-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #7a6f45, #c9b978);
+  transition: width 0.2s ease;
+}
+
+#loading-text {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #a89c76;
+  letter-spacing: 1px;
+}
+
+/* ---------------- End screen ---------------- */
+
+#end-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 5, 3, 0.82);
+  transition: opacity 0.5s ease;
+}
+
+#end-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#end-box {
+  text-align: center;
+  color: #f0e6c5;
+  background: linear-gradient(180deg, rgba(28,26,20,0.96), rgba(10,10,7,0.97));
+  border: 2px solid #766c46;
+  border-radius: 14px;
+  padding: 50px 70px;
+  box-shadow: 0 0 50px rgba(0,0,0,0.7);
+}
+
+#end-box h2 {
+  font-family: 'IM Fell English SC', serif;
+  font-size: 42px;
+  letter-spacing: 2px;
+  margin-bottom: 14px;
+  color: #f3e7c2;
+  text-shadow: 0 0 16px rgba(220, 200, 140, 0.5);
+}
+
+#end-box p {
+  font-size: 15px;
+  color: #c3b98f;
+  margin-bottom: 6px;
+}
+
+#end-score {
+  margin-top: 6px;
+  margin-bottom: 22px !important;
+  font-size: 18px !important;
+  color: #efe3ba !important;
+  font-weight: 700;
+}
+
+#restart-button {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 12px 34px;
+  border-radius: 8px;
+  border: 2px solid #8a7d4d;
+  background: linear-gradient(180deg, #4a4530, #2a2718);
+  color: #f3e9c9;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#restart-button:hover {
+  background: linear-gradient(180deg, #635a3a, #38331f);
+  box-shadow: 0 0 16px rgba(220, 200, 140, 0.35);
+  transform: translateY(-1px);
+}
+
+#restart-button:active {
+  transform: translateY(1px);
+}
+
+/* ---------------- Nueva pantalla final: botones adicionales ---------------- */
+/* Mismo estilo exacto que #restart-button, duplicado para no tocar esa regla */
+
+#end-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#home-button,
+#continue-button {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 12px 34px;
+  border-radius: 8px;
+  border: 2px solid #8a7d4d;
+  background: linear-gradient(180deg, #4a4530, #2a2718);
+  color: #f3e9c9;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#home-button:hover,
+#continue-button:hover {
+  background: linear-gradient(180deg, #635a3a, #38331f);
+  box-shadow: 0 0 16px rgba(220, 200, 140, 0.35);
+  transform: translateY(-1px);
+}
+
+#home-button:active,
+#continue-button:active {
+  transform: translateY(1px);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------------- Botón "Saltar juego" ---------------- */
+/* Esquina superior derecha, estilo coherente con el HUD y los botones del proyecto.
+   No interfiere con el HUD (esquina izquierda/centro) ni con el control del personaje. */
+
+#skip-button {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 21;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 2px solid #6b6142;
+  background: linear-gradient(180deg, rgba(30, 28, 22, 0.92), rgba(12, 11, 8, 0.92));
+  color: #b7ac82;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#skip-button:hover {
+  background: linear-gradient(180deg, #4a4530, #2a2718);
+  color: #f3e9c9;
+  box-shadow: 0 0 12px rgba(220, 200, 140, 0.3);
+}
+
+#skip-button:active {
+  transform: translateY(1px);
+}
