@@ -1,4 +1,12 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La casita gótica · Beatriz Bustamante</title>
+<link rel="icon" href="./img/ui/calaverita-propia-cursor.png">
+</head>
+<body>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Cinzel:wght@600&family=Grenze+Gotisch:wght@500&display=swap');
 
@@ -14,7 +22,7 @@ html, body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #08050b url('./img/general/fondo-casa-halloween.webp') center center / cover no-repeat;
+  background: #08050b;
   border-radius: 8px;
   font-family: 'Cormorant Garamond', serif;
 }
@@ -26,13 +34,12 @@ html, body {
   display: block;
   cursor: grab;
   touch-action: none;
-  /* El lienzo ocupa toda la pantalla, pero el render 3D mantiene
-     siempre el formato 16:9 para que la casa y la muñeca no se deformen. */
+  /* El lienzo ocupa la pantalla; la cámara adapta su proyección sin deformar el arte. */
 }
 #c.grabbing { cursor: grabbing; }
-#c.hoverable { cursor: url('./img/ui/cursor-calaverita.svg') 18 19, pointer; }
+#c.hoverable { cursor: url('./img/ui/calaverita-propia-cursor.png') 32 32, pointer; }
 /* Calaverita también sobre controles clicables de la interfaz */
-button:hover, a:hover, [role='button']:hover { cursor: url('./img/ui/cursor-calaverita.svg') 18 19, pointer; }
+button:hover, a:hover, [role='button']:hover { cursor: url('./img/ui/calaverita-propia-cursor.png') 32 32, pointer; }
 
 #hint {
   position: absolute;
@@ -206,7 +213,7 @@ button:hover, a:hover, [role='button']:hover { cursor: url('./img/ui/cursor-cala
 #abismo-close {position:absolute;top:5px;right:10px;width:36px;height:34px;cursor:pointer;border:1px solid #9c82b2;border-radius:5px;color:#fff;background:#35223e;font-size:25px;line-height:1}
 
 /* Zona clicable real, alineada con el póster 3D. No depende del raycaster. */
-#pig-story-link {position:fixed;display:none;z-index:35;opacity:1;background:transparent;border:0;padding:0;cursor:url('./img/ui/cursor-calaverita.svg') 18 19,pointer;touch-action:manipulation;}
+#pig-story-link {position:fixed;display:none;z-index:35;opacity:1;background:transparent;border:0;padding:0;cursor:url('./img/ui/calaverita-propia-cursor.png') 32 32,pointer;touch-action:manipulation;}
 #pig-story-link:hover {outline:none;}
 #pig-story-link:focus, #pig-story-link:focus-visible {outline:none;}
 
@@ -238,9 +245,9 @@ button:hover, a:hover, [role='button']:hover { cursor: url('./img/ui/cursor-cala
 #tartalo-video-close:focus-visible { outline:3px solid #f2c98a; outline-offset:3px; }
 
 /* Bienvenida: instrucciones iniciales de exploración. */
-#explore-welcome { box-sizing:border-box; width:min(460px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; padding:30px 26px; border:2px solid #80618e; border-radius:14px; background:#1b1220; color:#f1e4ce; text-align:center; font-family:Georgia,serif; box-shadow:0 18px 70px #0009; }
+#explore-welcome { box-sizing:border-box; width:min(460px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; padding:20px 22px; border:2px solid #80618e; border-radius:14px; background:#1b1220; color:#f1e4ce; text-align:center; font-family:Georgia,serif; box-shadow:0 18px 70px #0009; }
 #explore-welcome::backdrop { background:rgba(5,3,8,.78); }
-#explore-welcome h2 { margin:0 0 18px; font-size:clamp(24px,5vw,32px); color:#e3c18b; }
+#explore-welcome h2 { margin:0 0 12px; font-size:clamp(24px,5vw,32px); color:#e3c18b; }
 #explore-welcome p { font-size:17px; line-height:1.55; margin:12px 0; }
 #explore-welcome .welcome-secret { color:#d3b3e1; font-style:italic; }
 #explore-welcome button { margin-top:14px; padding:12px 22px; border:1px solid #d9ba86; border-radius:7px; background:#493052; color:#fff1d8; font:inherit; cursor:pointer; }
@@ -253,17 +260,69 @@ button:hover, a:hover, [role='button']:hover { cursor: url('./img/ui/cursor-cala
 #cat-video-close:focus-visible { outline:3px solid #f2c98a; outline-offset:3px; }
 
 #quick-portfolio-link{position:fixed;left:18px;bottom:18px;z-index:50;padding:10px 15px;border:1px solid #b898c9;border-radius:6px;background:rgba(25,14,32,.94);color:#f8ead5;font:14px/1.4 Georgia,serif;text-decoration:none;max-width:calc(100vw - 110px);box-sizing:border-box}#quick-portfolio-link:focus-visible{outline:3px solid #f2c98a;outline-offset:3px}@media(max-width:600px){#quick-portfolio-link{left:12px;bottom:18px;font-size:12px;padding:9px 12px}}
+
+/* Adaptación móvil: controles táctiles independientes del dibujo 3D. */
+#mobile-dpad {display:none;position:absolute;left:max(12px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));z-index:70;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(3,46px);gap:3px;touch-action:none;user-select:none;-webkit-user-select:none;}
+#mobile-dpad button {font:700 21px/1 sans-serif;border:1px solid rgba(236,215,249,.5);border-radius:10px;color:#fff5df;background:rgba(37,20,48,.75);touch-action:none;user-select:none;-webkit-user-select:none;}
+#mobile-dpad button:active,#mobile-dpad button.pressed {background:rgba(112,64,133,.93);}
+#mobile-dpad .up {grid-column:2;grid-row:1} #mobile-dpad .left {grid-column:1;grid-row:2} #mobile-dpad .down {grid-column:2;grid-row:2} #mobile-dpad .right {grid-column:3;grid-row:2}
+@media (pointer:coarse) {
+  #mobile-dpad.visible{display:grid}
+  #interior-controls{display:none !important}
+  #room-panel{bottom:max(12px,env(safe-area-inset-bottom));left:auto;right:max(8px,env(safe-area-inset-right));transform:translateY(12px);width:min(44vw,230px);gap:5px;}
+  #room-panel.visible{transform:translateY(0)}
+  #room-label{font-size:clamp(10px,2.7vw,13px);text-align:center}
+  #room-desc{font-size:clamp(10px,2.4vw,12px);max-width:100%}
+  #exit-btn{font-size:10px;padding:10px 8px;min-height:40px;letter-spacing:0}
+  #hint{font-size:clamp(11px,2.8vw,16px);max-width:65vw;text-align:center}
+  #music-toggle{top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));padding:8px 10px}
+}
+@media (pointer:coarse) and (max-height:460px) {
+  #mobile-dpad{grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,38px)}
+  #mobile-dpad .up{grid-column:2;grid-row:1}
+  #mobile-dpad .left{grid-column:1;grid-row:2}
+  #mobile-dpad .down{grid-column:2;grid-row:2}
+  #mobile-dpad .right{grid-column:3;grid-row:2}
+  #room-desc{display:none}
+}
+/* El lienzo sigue el área visible incluso con las barras del navegador móvil. */
+#wrap{height:100dvh;border-radius:0}
+#orientation-tip{position:absolute;top:max(12px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:45;max-width:80%;padding:8px 12px;border:1px solid #b898c9;border-radius:8px;background:#211525ed;color:#f8ead5;font:14px/1.3 Georgia,serif;text-align:center;pointer-events:none}
+#room-camera{display:none;position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:50;width:min(44vw,240px);padding:8px 12px;border:1px solid #b898c9;border-radius:8px;background:#211525ed;color:#f8ead5;font:14px/1.3 Georgia,serif;box-sizing:border-box}
+#room-camera input{display:block;width:100%;min-height:44px;accent-color:#d9a85c}
+#wrap.in-room #quick-portfolio-link,#wrap.in-room #portfolio-signature{display:none}
+#wrap.in-room #orientation-tip{display:none}
+@media(pointer:coarse){#exit-btn{min-height:44px;font-size:12px}#room-label{font-size:13px}#room-desc{font-size:13px}#mobile-dpad{grid-template-rows:repeat(2,46px)}#hint{top:92px}}
+@media(pointer:fine){#orientation-tip{display:none}}
+@media(orientation:landscape){#orientation-tip{display:none}}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #f2c98a;outline-offset:3px}
+#room-shortcuts{display:none;position:absolute;bottom:max(85px,calc(env(safe-area-inset-bottom) + 72px));left:50%;transform:translateX(-50%);width:min(90%,460px);z-index:48;gap:8px;grid-template-columns:1fr 1fr}
+#room-shortcuts button{min-height:44px;padding:8px;border:1px solid #b898c9;border-radius:7px;background:#211525ed;color:#f8ead5;font:14px Georgia,serif}
+@media(pointer:coarse){#wrap.house-open:not(.in-room) #room-shortcuts{display:grid}#mobile-dpad{grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,46px)}}
+@media(pointer:coarse) and (max-height:460px){#room-shortcuts{bottom:16px;width:55%;grid-template-columns:repeat(4,1fr);left:auto;right:12px;transform:none}}
+#explore-welcome button:disabled{opacity:.55;cursor:wait}
 </style>
+<link rel="stylesheet" href="./responsive-fase2.css">
 
+<link rel="stylesheet" href="./document-viewer.css">
+<script src="./viewport-ui.js"></script>
+<script src="./document-viewer.js"></script>
 <div id="wrap">
-<a id="quick-portfolio-link" href="portfolio-editorial.html">Ver trabajos · acceso directo ↗</a>
+<a id="quick-portfolio-link" href="https://beatrizbbustamante.github.io/casita-portfolio/Portfolio_Editorial_Beatriz_Bustamante_Actualizado.pdf" target="_blank" rel="noopener noreferrer">Ver trabajos · acceso directo ↗</a>
 
-  <canvas id="c"></canvas>
+  <div id="exterior-backdrop" aria-hidden="true"></div>
+<div id="touch-hints" aria-label="Objetos interactivos"></div>
+<div id="scene-tools"><button id="rooms-menu-btn" type="button" aria-label="Elegir habitación" aria-controls="room-shortcuts" aria-expanded="false" title="Habitaciones">⌂</button><button id="help-toggle" type="button" aria-label="Mostrar puntos interactivos" aria-pressed="false" title="Mostrar pistas">?</button><button id="fullscreen-toggle" type="button" aria-label="Pantalla completa" aria-pressed="false" title="Pantalla completa">⛶</button></div>
+<div id="scene-status" role="status"></div>
+<canvas id="c" tabindex="0" aria-label="Casita interactiva. Usa las flechas o WASD para caminar."></canvas>
+<nav id="room-shortcuts" aria-label="Entrar en una habitación"><button data-room="p1-izq"><strong>Dormitorio</strong><span>Sobre mí</span></button><button data-room="p1-der"><strong>Estudio</strong><span>Trabajos</span></button><button data-room="pb-izq"><strong>Salón</strong><span>Contacto</span></button><button data-room="pb-der"><strong>Cocina</strong><span>Bocetos</span></button></nav>
+<div id="orientation-tip">Puedes jugar en vertical. En horizontal verás más de la casita.</div>
+<label id="room-camera">Explorar habitación<input id="camera-pan" type="range" min="0" max="1" step="0.001" value="0.5" aria-label="Desplazar la vista de la habitación"></label>
   <button id="music-toggle" type="button" aria-label="Activar música de ambiente" aria-pressed="false">♫ Música: OFF</button>
   <audio id="exterior-music" src="https://res.cloudinary.com/dslosjjeb/video/upload/v1793180937/scary-house_tqhmhj.mp3" preload="none" loop></audio>
 
   <header id="portfolio-signature" aria-label="Portfolio de Beatriz Bustamante"><img src="./img/fachada/rotulo-portfolio.png" alt="PORTFOLIO — Beatriz Bustamante" draggable="false"></header>
-  <a id="pig-story-link" href="./cuento-interactivo/index.html" target="_blank" rel="noopener noreferrer" aria-label="Abrir el Cuento interactivo del Cementerio Sostenible en una ventana nueva" title="Cuento del Cementerio Sostenible — abrir en una ventana nueva"></a>
+  <a id="pig-story-link" href="https://beatrizbbustamante.github.io/Cementerio-Sostenible-04-11-26/" target="_blank" rel="noopener noreferrer" aria-label="Abrir el Cuento interactivo del Cementerio Sostenible en una ventana nueva" title="Cuento del Cementerio Sostenible — abrir en una ventana nueva"></a>
   <div id="hint">Haz clic en la fachada para ver las habitaciones</div>
   <div id="interior-controls">WASD / Flechas = caminar · Esc = volver a la casa</div>
   <div id="room-loading">Entrando...</div>
@@ -340,6 +399,12 @@ button:hover, a:hover, [role='button']:hover { cursor: url('./img/ui/cursor-cala
     </div>
   </div>
   <button id="facade-btn" type="button">Volver a poner fachada</button>
+  <nav id="mobile-dpad" aria-label="Mover personaje">
+    <button type="button" class="up" data-move="arrowup" aria-label="Caminar hacia arriba">▲</button>
+    <button type="button" class="left" data-move="arrowleft" aria-label="Caminar a la izquierda">◀</button>
+    <button type="button" class="down" data-move="arrowdown" aria-label="Caminar hacia abajo">▼</button>
+    <button type="button" class="right" data-move="arrowright" aria-label="Caminar a la derecha">▶</button>
+  </nav>
   <div id="room-panel">
     <div id="room-label"></div>
     <div id="room-desc"></div>
@@ -350,12 +415,27 @@ button:hover, a:hover, [role='button']:hover { cursor: url('./img/ui/cursor-cala
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function () {
+  window.__assetsReady = false;
+  let assetErrors = 0;
+  THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
+    const status = document.getElementById('asset-status');
+    if (status) status.textContent = 'Preparando la casita… ' + Math.round(loaded / total * 100) + '%';
+  };
+  THREE.DefaultLoadingManager.onError = () => { assetErrors++; };
+  THREE.DefaultLoadingManager.onLoad = () => {
+    window.__assetsReady = true;
+    const status = document.getElementById('asset-status');
+    if (status) status.textContent = assetErrors ? 'Algún recurso no se ha podido cargar. Comprueba la conexión y recarga para verlo todo.' : 'La casita está lista para explorar.';
+    const button = document.querySelector('#explore-welcome button');
+    if (button) button.disabled = false;
+  };
   const canvas = document.getElementById('c');
   const portfolioSignature = document.getElementById('portfolio-signature');
+  // Enlace del cuadro TRES CERDITOS del ESTUDIO; no es la nariz del cerdo de la fachada.
   const pigStoryLink = document.getElementById('pig-story-link');
   pigStoryLink.addEventListener('pointerdown', e => e.stopPropagation());
   function openCemeteryStory() {
-    window.open(new URL('cuento-interactivo/index.html', document.baseURI).href,
+    window.open('https://beatrizbbustamante.github.io/Cementerio-Sostenible-04-11-26/',
       '_blank', 'popup=yes,noopener,noreferrer,width=1200,height=850');
   }
   pigStoryLink.addEventListener('click', e => {
@@ -372,9 +452,7 @@ button:hover, a:hover, [role='button']:hover { cursor: url('./img/ui/cursor-cala
   const exitBtn = document.getElementById('exit-btn');
   const facadeBtn = document.getElementById('facade-btn');
 
-  // Formato de referencia de la escena. Se conserva aunque la ventana
-  // sea ultrapanorámica, vertical o cambie al entrar/salir de pantalla completa.
-  // Así la geometría 3D nunca se estira para rellenar un formato distinto.
+  // Composición virtual de referencia para explorar los interiores estrechos.
   const DESIGN_ASPECT = 16 / 9;
 
   const w = window.innerWidth || canvas.clientWidth || 1280;
@@ -831,7 +909,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     if (turnState) {
       turnState.timer += dt;
 
-      while (turnState.timer >= TURN_FRAME_DURATION && turnState) {
+      while (turnState && turnState.timer >= TURN_FRAME_DURATION) {
         turnState.timer -= TURN_FRAME_DURATION;
         const next = turnState.index + turnState.step;
 
@@ -924,11 +1002,16 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
   });
 
   // Estructura visible al retirar la fachada: gris oscuro, nunca blanca.
-  const wallMat = new THREE.MeshLambertMaterial({ color: 0x3a3740, side: THREE.DoubleSide });
+  // Evitar interferencias de profundidad en los cantos de las paredes exteriores.
+  // El desplazamiento solo afecta al depth buffer; no cambia color ni geometría.
+  const wallMat = new THREE.MeshLambertMaterial({ color: 0x3a3740, side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
   const darkMat = new THREE.MeshLambertMaterial({ color: 0x808080, side: THREE.DoubleSide });
   const roofMat = new THREE.MeshLambertMaterial({ color: 0x909090 });
-  const floorMat = new THREE.MeshLambertMaterial({ map: floorTexture, side: THREE.DoubleSide });
-  const frameMat = new THREE.MeshLambertMaterial({ color: 0x606060 });
+  const floorMat = new THREE.MeshLambertMaterial({ map: floorTexture, side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 2 });
+  const frameMat = new THREE.MeshLambertMaterial({ color: 0x606060,
+    polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
   const chimneyMat = new THREE.MeshLambertMaterial({ color: 0x888888 });
 
   function box(bw, bh, bd, mat, x, y, z) {
@@ -985,11 +1068,25 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
   pedShape.closePath();
   const pedGeo = new THREE.ShapeGeometry(pedShape);
 
-  const pedFront = new THREE.Mesh(pedGeo, wallMat);
+  const pedBlackMat = new THREE.MeshBasicMaterial({ color: 0x030205, side: THREE.DoubleSide });
+  const pedFront = new THREE.Mesh(pedGeo, pedBlackMat);
   pedFront.position.set(0, HH + 0.35, roofDepth/2 + 0.08);
   exteriorGroup.add(pedFront);
 
-  const pedBack = new THREE.Mesh(pedGeo, wallMat);
+  // Calaverita original en el frontón: imagen recortada, sin fondo rectangular.
+  const pedSkullTexture = new THREE.TextureLoader().load('./img/ui/calaverita-propia-tejado.svg');
+  pedSkullTexture.colorSpace = THREE.SRGBColorSpace;
+  const pedSkull = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.42, 1.17),
+    new THREE.MeshBasicMaterial({ map: pedSkullTexture, transparent: true, alphaTest: 0.02,
+      depthWrite: false, side: THREE.DoubleSide })
+  );
+  pedSkull.position.set(0, HH + 0.35 + 0.94, roofDepth / 2 + 0.115);
+  pedSkull.renderOrder = 6;
+  // La calavera del tejado es un botón interactivo (raycast activo).
+  exteriorGroup.add(pedSkull);
+
+  const pedBack = new THREE.Mesh(pedGeo, pedBlackMat);
   pedBack.position.set(0, HH + 0.35, roofDepth/2 + 0.01);
   pedBack.rotation.y = Math.PI;
   exteriorGroup.add(pedBack);
@@ -1067,10 +1164,16 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
   exteriorGroup.add(pigMesh);
 
   let facadeVisible = true;
+  // Acercamiento exclusivamente de la vista general sin fachada.
+  // Se anima la distancia de cámara, no se modifican muebles ni hotspots.
+  const EXTERIOR_RADIUS_FACADE = 17;
+  const EXTERIOR_RADIUS_OPEN = 8.7;
+  let exteriorCameraRadius = EXTERIOR_RADIUS_FACADE;
 
   function setFacadeVisible(visible) {
     facadeVisible = visible;
     portfolioSignature.hidden = !visible;
+    document.getElementById('wrap').classList.toggle('house-open', !visible);
     facadeMesh.visible = visible;
     pigMesh.visible = visible;
     darkRoomGroup.visible = !visible && mode === 'exterior';
@@ -1089,6 +1192,9 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
   scene.add(ambient);
   const dir = new THREE.DirectionalLight(0xaabbff, 1.0);
   dir.position.set(3, 10, 8); dir.castShadow = true;
+  // Reduce el shadow acne (líneas temblorosas) sobre bordes de la estructura.
+  dir.shadow.normalBias = 0.02;
+  dir.shadow.bias = -0.0001;
   scene.add(dir);
   const fill = new THREE.DirectionalLight(0x8899cc, 0.4);
   fill.position.set(-5, 2, 4);
@@ -1162,10 +1268,10 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
   const darkRoomGroup = new THREE.Group();
   exteriorGroup.add(darkRoomGroup);
   const roomPlaques = {
-    'pb-izq': 'Contacto',
-    'pb-der': 'Bocetos y más',
-    'p1-izq': 'Sobre mí',
-    'p1-der': 'Trabajos'
+    'pb-izq': ['Salón','Contacto'],
+    'pb-der': ['Cocina','Bocetos'],
+    'p1-izq': ['Dormitorio','Sobre mí'],
+    'p1-der': ['Estudio','Trabajos']
   };
 
   function createVictorianPlaque(label) {
@@ -1185,9 +1291,12 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
       ctx.lineTo(x + 26, 128); ctx.lineTo(x + 13, 141); ctx.closePath(); ctx.fill();
     }
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = 'bold 76px Georgia, serif';
     ctx.fillStyle = '#f3eafa';
-    ctx.fillText(label, 512, 131, 805);
+    ctx.font = 'bold 112px Georgia, serif';
+    ctx.fillText(label[0], 512, 84, 805);
+    ctx.font = '84px Georgia, serif';
+    ctx.fillStyle = '#d5bbef';
+    ctx.fillText(label[1], 512, 184, 805);
     const texture = new THREE.CanvasTexture(c);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -1221,18 +1330,8 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
   });
   darkRoomGroup.visible = false;
 
-  // Fondo ilustrado proporcionado por el usuario para la pantalla principal.
-  const bgTexture = new THREE.TextureLoader().load('FONDO.png');
-  bgTexture.colorSpace = THREE.SRGBColorSpace;
-  const bgMat = new THREE.MeshBasicMaterial({
-    map: bgTexture,
-    depthWrite: false,
-    depthTest: false
-  });
-  const bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(48, 27), bgMat);
-  bgPlane.position.set(0, 6, -10);
-  bgPlane.renderOrder = -100;
-  scene.add(bgPlane);
+  // Una sola ilustración CSS. No se duplica como textura 3D.
+  const bgPlane = new THREE.Group(); // Referencia no renderizable para la navegación existente.
 
   // ─── EXTERIOR / INTERIOR NAVEGABLE ─────────────────────────
   const EXT_TARGET = new THREE.Vector3(0, 0.9, 0);
@@ -1299,6 +1398,22 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     };
   }
 
+  function exteriorFraming(visible = facadeVisible) {
+    const width = canvas.clientWidth || innerWidth, height = canvas.clientHeight || innerHeight;
+    const target = new THREE.Vector3(visible ? -2.55 : 0, visible ? 3.1 : 3.95, 0);
+    const phi = 1.43, dir = new THREE.Vector3(0,Math.cos(phi),Math.sin(phi));
+    const up = new THREE.Vector3(0,Math.sin(phi),-Math.cos(phi));
+    const tanV = Math.tan(camera.fov * Math.PI / 360), tanH = tanV * (width / height);
+    const paddingY = Math.min(.28, (height < 480 ? 56 : 96) / height);
+    const usableY = 1 - 2 * paddingY, usableX = 1 - 2 * 20 / width;
+    const bounds = visible ? {x:[-9.95,4.85],y:[-3.2,9.3],z:[1.8,5.5]} : {x:[-4.05,4.05],y:[-.15,8.02],z:[-1.9,2.05]};
+    let radius = visible ? EXTERIOR_RADIUS_FACADE : EXTERIOR_RADIUS_OPEN;
+    for(const x of bounds.x)for(const y of bounds.y)for(const z of bounds.z) {
+      const q=new THREE.Vector3(x,y,z).sub(target), depth=q.dot(dir);
+      radius=Math.max(radius,depth+Math.abs(q.x)/(tanH*usableX),depth+Math.abs(q.dot(up))/(tanV*usableY));
+    }
+    return {target,radius};
+  }
   function updateCameraFromView() {
     const { target, radius, theta, phi } = view;
     // Micro-oscilación angular: un operador real nunca sostiene una toma
@@ -1312,6 +1427,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     );
     _cineLookTmp.set(target.x + n.x * radius * 0.12, target.y + n.y * radius * 0.12, target.z);
     camera.lookAt(_cineLookTmp);
+    restoreFrontComposition();
   }
 
   function startTransition(endTarget, endRadius, endTheta, endPhi, dur, onDone) {
@@ -1655,24 +1771,27 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
       group.add(salonBooks);
       room.salonBooksButton = salonBooks; // Clic en la estantería: abrir vídeo en una ventana superpuesta.
 
-      // Cuadro de la pared derecha: imagen original de la usuaria, recortada
-      // solo por sus márgenes transparentes. Posición basada en la captura de referencia.
-      const salonPaintingTexture = new THREE.TextureLoader().load('./img/salon/cuadro-pared-derecha.webp');
+      // Nuevo retrato gótico del Salón. Su plano sigue físicamente la pared
+      // derecha, igual que el cuadro de Rapunzel del Estudio.
+      // La textura original conserva sus transparencias y resolución.
+      const salonPaintingTexture = new THREE.TextureLoader().load('./img/salon/retrato-espectro-purpura.webp');
       salonPaintingTexture.colorSpace = THREE.SRGBColorSpace;
-      salonPaintingTexture.anisotropy = 4;
+      salonPaintingTexture.anisotropy = 8;
+      const salonPaintingHeight = 2.05;
+      const salonPaintingWidth = salonPaintingHeight * (1055 / 1491);
       const salonPainting = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.17, 3.30),
+        new THREE.PlaneGeometry(salonPaintingWidth, salonPaintingHeight),
         new THREE.MeshBasicMaterial({
           map: salonPaintingTexture, transparent: true, alphaTest: 0.025,
           side: THREE.DoubleSide, depthWrite: false
         })
       );
-      // La perspectiva está dibujada en la imagen, por eso no se vuelve a
-      // deformar el plano. Se sitúa delante de la pared lateral derecha.
-      salonPainting.position.set(xMax - 0.73, baseY + 2.73, INTERIOR_DEPTH / 2 - 0.55);
-      salonPainting.rotation.y = -0.08;
+      // Anclado a la pared lateral, con giro real de 90 grados.
+      salonPainting.position.set(xMax - 0.065, baseY + 2.73, 0.10);
+      salonPainting.rotation.y = -Math.PI / 2;
+      salonPainting.renderOrder = 7;
       group.add(salonPainting);
-      room.salonPaintingButton = salonPainting; // Clic sobre el cuadro: vídeo propio.
+      room.salonPaintingButton = salonPainting; // Conserva exactamente el enlace del vídeo existente.
 
       // El Salón: sofá gótico apoyado contra la pared del fondo, agrandado
       // para ocupar casi todo el ancho de la pared y dar espacio de sobra
@@ -1999,6 +2118,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
 
   function enterRoom(room) {
     if (mode !== 'exterior') return;
+    sceneStatus.textContent='';
     // La casa solo puede abrirse por las habitaciones cuando la fachada está retirada.
     if (facadeVisible) return;
     exteriorMusic.pause();
@@ -2020,10 +2140,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     turnState = null;
     anim.key = null; // fuerza a recalcular la animación al entrar
 
-    // Plano de presentación: arrancamos con la sala entera a pantalla
-    // completa (mismo encuadre de siempre) y, a partir de aquí, el
-    // director de fotografía se encarga de deslizarse suavemente hacia el
-    // seguimiento normal (ver updateInteriorCinematicCamera).
+    // Encuadre fijo de la habitación desde el primer instante, sin seguimiento ni zoom.
     updateStaticRoomCamera(room);
     roomEnterTime = cineTime;
     camSmoothed.ready = false;
@@ -2054,11 +2171,18 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     );
 
     mode = 'interior';
+    closeRoomsMenu();
+    canvas.focus({preventScroll:true});
+    document.getElementById('wrap').classList.add('in-room');
+    cameraPan.value = '0.5';
+    // Ambos escenarios utilizan todo el canvas con encuadres propios.
+    resizeRenderer();
     hintEl.classList.add('hidden');
     labelEl.textContent = room.label;
     descEl.textContent = room.desc;
     panelEl.classList.add('visible');
     interiorControlsEl.classList.add('visible');
+    mobileDpad.classList.add('visible');
     loadingEl.classList.remove('visible');
     candleTarget = 1.1;
     candle.position.set(room.center.x, room.yMin + INTERIOR_HEIGHT * 0.6, -INTERIOR_DEPTH * 0.25);
@@ -2066,9 +2190,12 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
 
   function exitRoom() {
     if (mode !== 'interior' || !activeRoom) return;
+    sceneStatus.textContent='';
 
     panelEl.classList.remove('visible');
     interiorControlsEl.classList.remove('visible');
+    mobileDpad.classList.remove('visible');
+    resetMobileControls();
     activeRoom.interiorGroup.visible = false;
     if (activeRoom.sleepingCharacter) activeRoom.sleepingCharacter.visible = false;
     characterSprite.visible = false;
@@ -2078,6 +2205,13 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     dir.intensity = DIR_BASE;
     fill.intensity = FILL_BASE;
     mode = 'exterior';
+    document.getElementById('wrap').classList.remove('in-room');
+    resizeRenderer();
+    exteriorCameraRadius = exteriorFraming().radius;
+    view.radius = exteriorCameraRadius;
+    view.target.copy(exteriorFraming().target);
+    view.theta = 0;
+    view.phi = 1.43;
     updateMusicToggle();
     hitboxGroup.visible = true;
     setFacadeVisible(facadeVisible);
@@ -2088,6 +2222,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     updateCameraFromView();
   }
 
+  document.querySelectorAll('[data-room]').forEach(button => button.addEventListener('click', () => enterRoom(rooms.find(room => room.id === button.dataset.room))));
   exitBtn.addEventListener('click', exitRoom);
   facadeBtn.addEventListener('click', () => {
     if (mode !== 'exterior') return;
@@ -2104,13 +2239,13 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
 
   function setPointerFromEvent(e) {
     const rect = canvas.getBoundingClientRect();
-    // El render ocupa un viewport 16:9 dentro del canvas: las coordenadas
-    // de los clics deben transformarse a ese viewport, no al canvas completo.
+    // Los clics se convierten al mismo viewport CSS que utiliza el renderer.
     const vp = renderer.__fixedViewport;
     if (vp) {
-      const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
-      const px = (e.clientX - rect.left) * scaleX;
-      const py = (rect.bottom - e.clientY) * scaleY;
+      // El viewport se guarda en píxeles CSS. No mezclarlo con canvas.width,
+      // que usa píxeles físicos (devicePixelRatio) en pantallas HiDPI.
+      const px = e.clientX - rect.left;
+      const py = rect.bottom - e.clientY;
       pointerNDC.x = ((px - vp.x) / vp.width) * 2 - 1;
       pointerNDC.y = ((py - vp.y) / vp.height) * 2 - 1;
     } else {
@@ -2121,6 +2256,8 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
 
   window.addEventListener('keydown', e => {
     const k = e.key.toLowerCase();
+    if (document.querySelector('[aria-modal="true"].visible') || e.target.matches('input, textarea, select, button, a')) return;
+    if (mode === 'interior' && ['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
     keys[k] = true;
 
     if (mode === 'interior' && e.key === 'Escape') {
@@ -2138,6 +2275,39 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     }
   });
   window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+  // Cruceta táctil: emplea el mismo estado de teclas y las mismas colisiones.
+  const mobileDpad = document.getElementById('mobile-dpad');
+  const mobileHeld = new Map();
+  const releaseTouchMove = (pointerId) => {
+    const key = mobileHeld.get(pointerId);
+    if (!key) return;
+    mobileHeld.delete(pointerId);
+    keys[key] = Array.from(mobileHeld.values()).includes(key);
+    mobileDpad.querySelectorAll('[data-move="' + key + '"]').forEach(b => b.classList.toggle('pressed',keys[key]));
+  };
+  mobileDpad.querySelectorAll('[data-move]').forEach(button => {
+    button.addEventListener('pointerdown', e => {
+      if (mode !== 'interior') return;
+      e.preventDefault();e.stopPropagation();
+      button.setPointerCapture(e.pointerId);
+      mobileHeld.set(e.pointerId,button.dataset.move);
+      keys[button.dataset.move]=true;
+      button.classList.add('pressed');
+      wakeIdleAnimation();
+    });
+    for (const name of ['pointerup','pointercancel','lostpointercapture']) {
+      button.addEventListener(name, e => {releaseTouchMove(e.pointerId);e.stopPropagation();});
+    }
+  });
+  function resetMobileControls(){
+    Object.keys(keys).forEach(key => keys[key] = false);
+    mobileHeld.clear();
+    mobileDpad.querySelectorAll('[data-move]').forEach(b=>{keys[b.dataset.move]=false;b.classList.remove('pressed');});
+  }
+  window.addEventListener('portfolio-document-open',resetMobileControls);
+  window.addEventListener('blur',resetMobileControls);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)resetMobileControls();});
+
 
   const salonVideoModal = document.getElementById('salon-video-modal');
   const salonVideoPlayer = document.getElementById('salon-video-player');
@@ -2346,7 +2516,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     if (attempt && typeof attempt.catch === 'function') attempt.catch(() => {});
   }
   function closeCatVideo() {
-    if (!catVideoModal.classList.contains('visible')) return;
+    if (!document.querySelector('[aria-modal="true"].visible') && !catVideoModal.classList.contains('visible')) return;
     catVideoPlayer.pause();
     catVideoPlayer.currentTime = 0;
     catVideoModal.classList.remove('visible');
@@ -2441,15 +2611,108 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
   ];
   function crowAtEvent(e) {
     if (mode !== 'exterior') return false;
-    const wrapRect = document.getElementById('wrap').getBoundingClientRect();
-    const x = e.clientX - wrapRect.left, y = e.clientY - wrapRect.top;
-    if (x < 0 || y < 0 || x > wrapRect.width || y > wrapRect.height) return false;
-    const scale = Math.max(wrapRect.width / 1813, wrapRect.height / 868);
-    const drawW = 1813 * scale, drawH = 868 * scale;
-    const imgX = (x - (wrapRect.width - drawW) / 2) / scale;
-    const imgY = (y - (wrapRect.height - drawH) / 2) / scale;
-    return crowSpots.some(c => ((imgX-c.x)/c.rx)**2 + ((imgY-c.y)/c.ry)**2 <= 1);
+    const p=backgroundCoordinates(e), minRadius=touchMedia.matches?22/p.scale:0;
+    return crowSpots.some(c=>((p.x-c.x)/Math.max(c.rx,minRadius))**2+((p.y-c.y)/Math.max(c.ry,minRadius))**2<=1);
   }
+
+  // Murciélagos pintados en el fondo (1813 x 868). Coordenadas relativas
+  // a la imagen original, con el mismo recorte responsive que los cuervos.
+  const batSqueak = new Audio('./audio/murcielago-original-pcm.wav');
+  batSqueak.preload = 'none';
+  batSqueak.volume = 0.75;
+  // Las tres figuras originales: la primera no recibe clics mientras la casa la oculte.
+  const batSpots = [
+    {x:990,y:190,rx:35,ry:20}, // Detrás de la casa cuando la fachada lo oculta.
+    {x:1148,y:155,rx:48,ry:32},
+    {x:1544,y:179,rx:49,ry:35}
+  ];
+  function batAtEvent(e) {
+    if(mode!=='exterior')return false;
+    const p=backgroundCoordinates(e),r=touchMedia.matches?22/p.scale:0;
+    return batSpots.some(b=>!backgroundHiddenByHouse(b)&&((p.x-b.x)/Math.max(b.rx,r))**2+((p.y-b.y)/Math.max(b.ry,r))**2<=1);
+  }
+  function playBatSqueak() {
+    batSqueak.pause();batSqueak.currentTime=0;
+    batSqueak.play().catch(()=>notifyScene('No se ha podido cargar el sonido original. Comprueba la conexión y vuelve a tocar.'));
+  }
+  let facadeAlpha=null, frontCompositionCache=null;
+  function backgroundHiddenByHouse(spot) {
+    if(!facadeVisible)return false;
+    const p=backgroundPoint(spot.x,spot.y);
+    const ray=new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2(p.x/canvas.clientWidth*2-1,1-p.y/canvas.clientHeight*2),camera);
+    const hit=ray.intersectObject(facadeMesh,false)[0];
+    if(!hit?.uv)return false;
+    if(!facadeAlpha) {
+      const image=facadeTexture.image;if(!image?.complete)return false;
+      const c=document.createElement('canvas');c.width=image.width;c.height=image.height;
+      const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,0,0);
+      facadeAlpha={data:ctx.getImageData(0,0,c.width,c.height).data,width:c.width,height:c.height};
+    }
+    const x=Math.min(facadeAlpha.width-1,Math.floor(hit.uv.x*facadeAlpha.width)),y=Math.min(facadeAlpha.height-1,Math.floor((1-hit.uv.y)*facadeAlpha.height));
+    return facadeAlpha.data[(y*facadeAlpha.width+x)*4+3]>200;
+  }
+  function restoreFrontComposition() {
+    if(mode!=='exterior')return;
+    camera.clearViewOffset();camera.updateMatrixWorld();facadeMesh.updateWorldMatrix(true,false);
+    if(!facadeVisible||!facadeTexture.image?.complete)return;
+    const key=[canvas.clientWidth,canvas.clientHeight,Math.round(view.radius*20),Math.round(view.target.x*20),Math.round(view.target.y*20)].join(':');
+    if(frontCompositionCache?.key===key){camera.setViewOffset(canvas.clientWidth,canvas.clientHeight,0,frontCompositionCache.shift,canvas.clientWidth,canvas.clientHeight);return;}
+    const painted=backgroundPoint(990,190);
+    if(painted.x<0||painted.x>canvas.clientWidth||painted.y<0||painted.y>canvas.clientHeight)return;
+    const top=facadeMesh.localToWorld(new THREE.Vector3(0,FACADE_HEIGHT/2,0)).project(camera);
+    const maxShift=Math.min(canvas.clientHeight*.12,Math.max(0,(1-top.y)*canvas.clientHeight/2-80));
+    const samples=[[990,190],[960,190],[1020,190],[990,174],[990,206],[968,178],[1012,202]];
+    let bestShift=0,bestCount=-1;
+    for(let shift=0;shift<=maxShift;shift+=3){
+      camera.setViewOffset(canvas.clientWidth,canvas.clientHeight,0,shift,canvas.clientWidth,canvas.clientHeight);
+      const count=samples.filter(([x,y])=>backgroundHiddenByHouse({x,y})).length;
+      if(count>bestCount){bestCount=count;bestShift=shift;}
+      if(count===samples.length)break;
+    }
+    frontCompositionCache={key,shift:bestShift};
+    camera.setViewOffset(canvas.clientWidth,canvas.clientHeight,0,bestShift,canvas.clientWidth,canvas.clientHeight);
+    camera.updateMatrixWorld();
+  }
+
+  // Risa original de brujita, breve y juguetona. Solo se reproduce al hacer clic.
+  const witchGiggle = new Audio('https://res.cloudinary.com/dslosjjeb/video/upload/v1793730418/dragon-studio-witch-laugh-401713_tlo0us.mp3');
+  witchGiggle.preload = 'auto';
+  witchGiggle.volume = 0.55;
+  function skullAtPointer(e) {
+    if (mode !== 'exterior' || facadeVisible) return false;
+    setPointerFromEvent(e);
+    raycaster.setFromCamera(pointerNDC, camera);
+    return raycaster.intersectObject(pedSkull, false).length > 0;
+  }
+  // La nariz se detecta en coordenadas UV de la imagen del cerdito, no de pantalla.
+  // Así el punto interactivo sigue la nariz al cambiar la resolución o el encuadre.
+  const pigGrunt = new Audio('https://res.cloudinary.com/dslosjjeb/video/upload/v1784472808/freesound_community-pig-grunt-100272_m2wsef.mp3');
+  pigGrunt.preload = 'none';
+  pigGrunt.volume = 0.75;
+  function pigNoseAtPointer(e) {
+    if (mode !== 'exterior' || !facadeVisible || !pigMesh.visible) return false;
+    setPointerFromEvent(e);
+    raycaster.setFromCamera(pointerNDC, camera);
+    const hits = raycaster.intersectObject(pigMesh, false);
+    if (!hits.length || !hits[0].uv) return false;
+    // Coordenadas sobre cerdo-fachada.webp (1487 x 1836 píxeles).
+    const px = hits[0].uv.x * 1487;
+    const py = (1 - hits[0].uv.y) * 1836;
+    return ((px - 880) / 130) ** 2 + ((py - 341) / 103) ** 2 <= 1;
+  }
+  function playPigGrunt() {
+    pigGrunt.pause();
+    pigGrunt.currentTime = 0;
+    pigGrunt.play().catch(() => {});
+  }
+
+  function playWitchGiggle() {
+    witchGiggle.pause();
+    witchGiggle.currentTime = 0;
+    witchGiggle.play().catch(() => {});
+  }
+
   function playCrow() {
     crowSound.pause();
     crowSound.currentTime = 0;
@@ -2462,15 +2725,9 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
   wolfSound.preload = 'none';
   wolfSound.volume = 0.8;
   function moonAtEvent(e) {
-    if (mode !== 'exterior') return false;
-    const wrapRect = document.getElementById('wrap').getBoundingClientRect();
-    const x = e.clientX - wrapRect.left, y = e.clientY - wrapRect.top;
-    if (x < 0 || y < 0 || x > wrapRect.width || y > wrapRect.height) return false;
-    const scale = Math.max(wrapRect.width / 1813, wrapRect.height / 868);
-    const drawW = 1813 * scale, drawH = 868 * scale;
-    const imgX = (x - (wrapRect.width - drawW) / 2) / scale;
-    const imgY = (y - (wrapRect.height - drawH) / 2) / scale;
-    return ((imgX - 1357) / 100)**2 + ((imgY - 145) / 100)**2 <= 1;
+    if(mode!=='exterior')return false;
+    const p=backgroundCoordinates(e);
+    return ((p.x-1357)/100)**2+((p.y-145)/100)**2<=1;
   }
   function playWolf() {
     wolfSound.pause();
@@ -2479,8 +2736,11 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
   }
 
   canvas.addEventListener('pointerdown', e => {
+    if (pigNoseAtPointer(e)) { playPigGrunt(); e.preventDefault(); e.stopPropagation(); return; }
+    if (skullAtPointer(e)) { playWitchGiggle(); e.preventDefault(); e.stopPropagation(); return; }
     if (moonAtEvent(e)) { playWolf(); e.preventDefault(); e.stopPropagation(); return; }
     if (crowAtEvent(e)) { playCrow(); e.preventDefault(); e.stopPropagation(); return; }
+    if (batAtEvent(e)) { playBatSqueak(); e.preventDefault(); e.stopPropagation(); return; }
     if (mode === 'transition') return;
 
 
@@ -2611,6 +2871,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     canvas.classList.add('grabbing');
   });
 
+  canvas.addEventListener('pointercancel', () => {isDragging = false; canvas.classList.remove('grabbing');});
   canvas.addEventListener('pointermove', e => {
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
 
@@ -2633,7 +2894,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     }
 
     if (mode === 'exterior') {
-      if (moonAtEvent(e) || crowAtEvent(e)) { canvas.classList.add('hoverable'); return; }
+      if (pigNoseAtPointer(e) || skullAtPointer(e) || moonAtEvent(e) || crowAtEvent(e) || batAtEvent(e)) { canvas.classList.add('hoverable'); return; }
       setPointerFromEvent(e);
       raycaster.setFromCamera(pointerNDC, camera);
 
@@ -2842,7 +3103,8 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     return true;
   }
 
-  function movePlayer() {
+  function movePlayer(dtMs = 1000 / 60) {
+    if(window.PortfolioDocuments?.isActive())return;
     if (mode !== 'interior' || !activeRoom) return;
     if (player.state === 'sitting' || player.state === 'sleeping') return;
 
@@ -2879,7 +3141,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     }
 
     const len = Math.hypot(moveX, moveZ) || 1;
-    const speed = player.speed * (keys['shift'] ? 1.7 : 1);
+    const speed = player.speed * (keys['shift'] ? 1.7 : 1) * Math.min(dtMs, 1000 / 30) / (1000 / 60);
     const nextX = player.x + (moveX / len) * speed;
     const nextZ = player.z + (moveZ / len) * speed;
 
@@ -3008,7 +3270,9 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
     const distForHeight = (INTERIOR_HEIGHT / 2) / Math.tan(vFov / 2);
     const distForWidth  = (INTERIOR_WIDTH / 2)  / Math.tan(hFov / 2);
-    const dist = Math.max(distForHeight, distForWidth) * 1.02;
+    // En interiores priorizamos cubrir toda la pantalla (como background-size: cover).
+    // Puede recortar ligeramente los bordes, pero evita que se vea el exterior.
+    const dist = Math.min(distForHeight, distForWidth) * 0.98;
     return { cx: room.center.x, baseY: room.yMin, dist };
   }
 
@@ -3028,7 +3292,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
   // así que cualquier valor por debajo de 1 es un acercamiento.
   const CINE_FOLLOW_FACTOR = 0.86;   // seguimiento normal, algo más cerca que el plano general
   const CINE_DETAIL_FACTOR = 0.74;   // plano de detalle (proximidad al sofá / sentarse)
-  const CINE_PAN_MAX = INTERIOR_WIDTH * 0.16; // paneo lateral máx. (tercios): nunca deja ver fuera de la sala
+  const CINE_PAN_MAX = INTERIOR_WIDTH * 0.035; // paneo lateral máx. (tercios): nunca deja ver fuera de la sala
   const CINE_ESTABLISH_DUR = 1.55;   // segundos del plano de presentación al entrar
   const CINE_CLOSEUP_DUR = 2.1;      // segundos que dura un plano de detalle forzado
 
@@ -3129,66 +3393,249 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
   }
 
   // ─── AJUSTE RESPONSIVE ─────────────────────────────────────
+// Controles de descubrimiento: sus anclas pertenecen a los objetos, nunca al viewport.
+  const hintLayer = document.getElementById('touch-hints');
+  const helpButton = document.getElementById('help-toggle');
+  const menuButton = document.getElementById('rooms-menu-btn');
+  const fullscreenButton = document.getElementById('fullscreen-toggle');
+  const sceneStatus = document.getElementById('scene-status');
+  const touchMedia = matchMedia('(any-pointer:coarse)');
+  let hintAnchors = [], hintStart = 0, hintDeadline = 0, hintMode = '', statusTimer;
+  let hintSceneKey = '';
+  // Cambiar la orientación no reinicia las pistas de la misma habitación.
+  touchMedia.addEventListener('change',()=>updateTouchHints());
+  function notifyScene(message) {
+    sceneStatus.textContent = message;
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(() => sceneStatus.textContent = '', 4500);
+  }
+  function showTouchHints(delay = 0) {
+    hintStart = performance.now() + delay;
+    hintDeadline = hintStart + 1800;
+    hintLayer.classList.remove('revealed');
+    // Reiniciar el breve parpadeo solo en una entrada o petición explícita.
+    hintLayer.querySelectorAll('img').forEach(img=>{img.style.animation='none';});
+    requestAnimationFrame(()=>hintLayer.querySelectorAll('img').forEach(img=>img.style.animation=''));
+    helpButton.setAttribute('aria-pressed', 'false');
+  }
+  function closeRoomsMenu() {
+    document.getElementById('wrap').classList.remove('rooms-menu-open');
+    menuButton.setAttribute('aria-expanded','false');
+  }
+  menuButton.addEventListener('click', () => {
+    if(mode==='interior'){exitRoom();setFacadeVisible(true);closeRoomsMenu();return;}
+    if(!facadeVisible){setFacadeVisible(true);closeRoomsMenu();return;}
+    setFacadeVisible(false);
+    const open = document.getElementById('wrap').classList.toggle('rooms-menu-open');
+    menuButton.setAttribute('aria-expanded', String(open));
+  });
+  helpButton.addEventListener('click', () => {
+    showTouchHints();
+    updateTouchHints();
+    if(touchMedia.matches && mode==='interior' && !hintAnchors.some(a=>!a.button.hidden)) notifyScene('Desliza «Explorar habitación» para descubrir los objetos de los laterales.');
+    if (!touchMedia.matches) notifyScene('La calaverita indica los objetos interactivos. Usa las flechas o WASD para caminar.');
+  });
+  document.getElementById('wrap').addEventListener('pointerdown', e => {
+    if (!e.target.closest('#room-shortcuts, #rooms-menu-btn')) closeRoomsMenu();
+  });
+  let fullscreenAttempted = false;
+  function isFullscreen() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function requestSceneFullscreen(automatic = false) {
+    if (automatic && (fullscreenAttempted || !touchMedia.matches)) return;
+    fullscreenAttempted = true;
+    const request = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+    if (!request || isFullscreen()) return;
+    try {
+      const attempt = request.call(document.documentElement, {navigationUI:'hide'});
+      if (attempt?.catch) attempt.catch(() => {
+        if (!automatic) notifyScene('Este navegador no permite ocultar sus barras ahora. Puedes seguir explorando.');
+      });
+    } catch (_) {
+      if (!automatic) notifyScene('La pantalla completa no está disponible. Puedes seguir explorando.');
+    }
+  }
+  fullscreenButton.hidden = false;
+  fullscreenButton.disabled = !(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  if(fullscreenButton.disabled)fullscreenButton.title='Pantalla completa no disponible en este navegador';
+  fullscreenButton.addEventListener('click', () => {
+    if (isFullscreen()) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      exit?.call(document)?.catch?.(() => {});
+    } else requestSceneFullscreen();
+  });
+  document.addEventListener('submit', e => {
+    if (e.target.closest('#explore-welcome')) {requestSceneFullscreen(true);hintSceneKey='';showTouchHints(3000);}
+  }, true);
+  function fullscreenChanged() {
+    fullscreenButton.setAttribute('aria-label',isFullscreen() ? 'Salir de pantalla completa' : 'Pantalla completa');
+    fullscreenButton.setAttribute('aria-pressed',String(isFullscreen()));
+    requestAnimationFrame(resizeRenderer);
+  }
+  document.addEventListener('fullscreenchange',fullscreenChanged);
+  document.addEventListener('webkitfullscreenchange',fullscreenChanged);
+  function backgroundLayout() {
+    const rect = canvas.getBoundingClientRect();
+    const scale = Math.max(rect.width / 1813, rect.height / 868);
+    return {rect,scale,x:(rect.width - 1813 * scale)/2,y:(rect.height - 868 * scale)/2};
+  }
+  function backgroundPoint(x,y) {
+    const b = backgroundLayout();
+    return {x:b.x+x*b.scale,y:b.y+y*b.scale,z:0};
+  }
+  function backgroundCoordinates(e) {
+    const b = backgroundLayout();
+    return {x:(e.clientX-b.rect.left-b.x)/b.scale,y:(e.clientY-b.rect.top-b.y)/b.scale,scale:b.scale};
+  }
+  function projectHint(anchor, local = anchor.local) {
+    if (anchor.background) return backgroundPoint(anchor.background.x,anchor.background.y);
+    const mesh=anchor.mesh;
+    mesh.updateWorldMatrix(true,false);
+    const p=mesh.localToWorld(local ? local.clone() : new THREE.Vector3()).project(camera);
+    const vp=renderer.__fixedViewport;
+    return {x:vp.x+(p.x+1)*vp.width/2,y:canvas.clientHeight-vp.y-(p.y+1)*vp.height/2,z:p.z};
+  }
+  function buildTouchHints() {
+    hintLayer.replaceChildren();hintAnchors=[];
+    function add(label, action, mesh, extra={}) {
+      const button=document.createElement('button');
+      button.type='button';button.className='touch-hint';button.setAttribute('aria-label',label);
+      button.innerHTML='<img src="./img/ui/calaverita-propia-cursor.png" alt="" width="20" height="20">';
+      button.addEventListener('pointerdown',e=>e.stopPropagation());
+      button.addEventListener('click',e=>{e.stopPropagation();action();});
+      hintLayer.append(button);hintAnchors.push({button,mesh,...extra});
+    }
+    if (mode==='interior' && activeRoom) {
+      const actions={
+        salonBooksButton:['Vídeo de la estantería',openSalonVideo],
+        salonPaintingButton:['Vídeo del retrato',openSalonPaintingVideo],
+        kitchenDoorButton:['Desarrollo de personajes',openPersonajes],
+        kitchenTartaloButton:['Vídeo de Tártalo',openTartaloVideo],
+        bedroomBooksButton:['Leer Abismo',openAbismo],
+        bedroomMirror:['Sobre mí',()=>{resetMobileControls();mirrorReportModal.classList.add('visible');mirrorReportClose.focus();}],
+        studyCatButton:['Vídeo del gato',openCatVideo],
+        studySkullButton:['Vídeo del fantasma',openGhostVideo],
+        cemeteryPosterButton:['Abrir cuento interactivo',openCemeteryStory],
+        rapunzelPictureButton:['Leer Rapunzel',openRapunzelPdf],
+        pigPictureButton:['Vídeo Pig Fiction',openPigVideo]
+      };
+      for(const [key,[label,action]] of Object.entries(actions))if(activeRoom[key])add(label,action,activeRoom[key]);
+    } else if(mode==='exterior') {
+      if(facadeVisible) {
+        add('Retirar la fachada',()=>setFacadeVisible(false),facadeMesh);
+        add('Escuchar al cerdito',playPigGrunt,pigMesh,{local:new THREE.Vector3((880/1487-.5)*PIG_WIDTH,(.5-341/1836)*PIG_HEIGHT,0)});
+      } else {
+        hitboxGroup.children.forEach(mesh=>add('Entrar: '+mesh.userData.room.label,()=>enterRoom(mesh.userData.room),mesh));
+        add('Escuchar la calaverita',playWitchGiggle,pedSkull);
+      }
+      add('Escuchar el aullido de la luna',playWolf,null,{background:{x:1357,y:145}});
+      crowSpots.forEach((spot,i)=>add('Escuchar cuervo '+(i+1),playCrow,null,{background:spot}));
+      batSpots.forEach((spot,i)=>{if(!backgroundHiddenByHouse(spot))add('Escuchar murciélago '+(i+1),playBatSqueak,null,{background:spot});});
+    }
+    const sceneKey=mode+':'+(activeRoom?.id||'')+':'+facadeVisible;
+    if(sceneKey!==hintSceneKey){hintSceneKey=sceneKey;showTouchHints(3000);}
+  }
+  function updateTouchHints() {
+    const signature=mode+':'+(activeRoom?.id||'')+':'+facadeVisible;
+    if(signature!==hintMode){hintMode=signature;buildTouchHints();}
+    const revealed=performance.now()>=hintStart && performance.now()<hintDeadline;
+    hintLayer.classList.toggle('revealed',revealed);
+    helpButton.setAttribute('aria-pressed',String(revealed));
+    const modal=!!document.querySelector('[aria-modal="true"].visible') || document.getElementById('explore-welcome')?.open;
+    hintLayer.hidden=modal || !touchMedia.matches;
+    if (!touchMedia.matches || !revealed) return;
+    const occupied=[];
+    const controls=['#scene-tools','#music-toggle:not([hidden])','#facade-btn.visible','#room-camera','#room-panel.visible','#mobile-dpad.visible'].map(selector=>document.querySelector(selector)).filter(el=>el&&getComputedStyle(el).display!=='none').map(el=>el.getBoundingClientRect());
+    const canvasRect=canvas.getBoundingClientRect();
+    function available(p) {
+      if(!Number.isFinite(p.x)||!Number.isFinite(p.y)||p.z < -1||p.z > 1||p.x<22||p.y<22||p.x>canvas.clientWidth-22||p.y>canvas.clientHeight-22)return false;
+      if(controls.some(r=>p.x+22>r.left-canvasRect.left&&p.x-22<r.right-canvasRect.left&&p.y+22>r.top-canvasRect.top&&p.y-22<r.bottom-canvasRect.top))return false;
+      return !occupied.some(q=>Math.abs(p.x-q.x)<40&&Math.abs(p.y-q.y)<40);
+    }
+    for(const anchor of hintAnchors) {
+      const candidates=anchor.samples || [anchor.local || new THREE.Vector3()];
+      const g=anchor.mesh?.geometry?.parameters;
+      // Buscar un punto visible SOBRE el mismo plano cuando su centro queda recortado o bajo la interfaz.
+      if(!anchor.samples&&g?.width&&g?.height&&!anchor.local) {
+        const offsets=[0,.1,-.1,.2,-.2,.3,-.3,.4,-.4,.48,-.48];
+        for(const y of offsets)for(const x of offsets)if(x||y)candidates.push(new THREE.Vector3(g.width*x,g.height*y,0));
+      }
+      anchor.samples=candidates;
+      let chosen=null;
+      const ordered=anchor.indicatorLocal ? [anchor.indicatorLocal,...candidates] : candidates;
+      for(const local of ordered){const p=projectHint(anchor,local);if(available(p)){chosen={p,local};break;}}
+      anchor.button.hidden=!chosen;
+      if(chosen){anchor.indicatorLocal=chosen.local;anchor.projected=chosen.p;occupied.push(chosen.p);anchor.button.style.left=chosen.p.x+'px';anchor.button.style.top=chosen.p.y+'px';}
+    }
+  }
+
+  const cameraPan = document.getElementById('camera-pan');
+  function updateRoomCrop() {
+    if (mode !== 'interior') return;
+    const width = canvas.clientWidth, height = canvas.clientHeight;
+    const fullWidth = Math.max(width, height * DESIGN_ASPECT);
+    camera.setViewOffset(fullWidth, height, (fullWidth - width) * Number(cameraPan.value), 0, width, height);
+    camera.updateProjectionMatrix();
+  }
+  cameraPan.addEventListener('input', updateRoomCrop);
   function resizeRenderer() {
-    const width = Math.max(1, window.innerWidth || canvas.clientWidth || 680);
-    const height = Math.max(1, window.innerHeight || canvas.clientHeight || 520);
+    const width = Math.max(1, canvas.clientWidth || window.innerWidth || 680);
+    const height = Math.max(1, canvas.clientHeight || window.innerHeight || 520);
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(width, height, false);
 
-    // Mantener una ventana de render 16:9 dentro del canvas.
-    // Nunca escalamos el resultado 3D de forma independiente en X/Y:
-    // cuando el monitor tiene otra proporción aparecen bandas laterales
-    // o superior/inferior, pero la casa y la muñeca conservan su tamaño relativo.
     const windowAspect = width / height;
-    let viewportWidth, viewportHeight, viewportX, viewportY;
-
-    if (windowAspect > DESIGN_ASPECT) {
-      viewportHeight = height;
-      viewportWidth = Math.round(height * DESIGN_ASPECT);
-      viewportX = Math.round((width - viewportWidth) / 2);
-      viewportY = 0;
-    } else {
-      viewportWidth = width;
-      viewportHeight = Math.round(width / DESIGN_ASPECT);
-      viewportX = 0;
-      viewportY = Math.round((height - viewportHeight) / 2);
-    }
 
     renderer.setScissorTest(false);
+    // El renderer recibe píxeles CSS y los convierte internamente según DPR.
     renderer.setViewport(0, 0, width, height);
     renderer.clear();
 
-    camera.aspect = DESIGN_ASPECT;
+    camera.clearViewOffset();
+    camera.aspect = mode === 'interior' ? Math.max(windowAspect, DESIGN_ASPECT) : windowAspect;
     camera.updateProjectionMatrix();
 
-    renderer.__fixedViewport = {
-      x: viewportX,
-      y: viewportY,
-      width: viewportWidth,
-      height: viewportHeight
-    };
+    renderer.__fixedViewport = {x:0,y:0,width,height};
+    // El interior es opaco: ninguna porción del cementerio puede verse detrás.
+    renderer.setClearColor(mode === 'interior' ? 0x130e1a : 0x000000,
+      mode === 'interior' ? 1 : 0);
 
-    // La firma sigue el viewport 16:9 para quedar siempre en la tierra inferior derecha.
-    portfolioSignature.style.left = `${viewportX + viewportWidth * 0.5137}px`;
-    portfolioSignature.style.top = `${height - viewportY - viewportHeight + viewportHeight * 0.6373}px`;
-    portfolioSignature.style.width = `${viewportWidth * 0.41952}px`;
+    // La firma sigue las coordenadas locales de la única ilustración exterior.
+    const background = backgroundLayout();
+    const titleMargin=18;
+    const titleWidth=Math.min(1813 * .41952 * background.scale, width-2*titleMargin, (height-150)*735/218);
+    const titleHeight=titleWidth*218/735;
+    portfolioSignature.style.width=titleWidth+'px';
+    portfolioSignature.style.left=clamp(background.x+1813*.5137*background.scale,titleMargin,width-titleWidth-titleMargin)+'px';
+    portfolioSignature.style.top=clamp(background.y+868*.6373*background.scale,70,height-titleHeight-70)+'px';
+    if (mode === 'exterior') {
+      const framing=exteriorFraming();view.target.copy(framing.target);view.radius=exteriorCameraRadius=framing.radius;updateCameraFromView();
+    }
 
     // La cámara de interior también conserva exactamente el mismo encuadre.
-    if (mode === 'interior' && activeRoom) updateStaticRoomCamera(activeRoom);
+    if (mode === 'interior' && activeRoom) {
+      updateStaticRoomCamera(activeRoom);
+      updateRoomCrop();
+    }
+    document.getElementById('room-camera').style.display = mode === 'interior' && windowAspect < DESIGN_ASPECT - 0.05 ? 'block' : 'none';
   }
 
   window.addEventListener('resize', resizeRenderer);
+  window.visualViewport?.addEventListener('resize', resizeRenderer);
+  window.addEventListener('orientationchange', () => requestAnimationFrame(resizeRenderer));
   resizeRenderer();
 
   // ─── BUCLE DE RENDER ────────────────────────────────────────
   let lastFrameTime = performance.now();
+  let animationFrame = 0, contextLost = false, suspendedAt = 0;
 
   function animate() {
-    requestAnimationFrame(animate);
+    animationFrame = 0;
+    if(document.hidden || contextLost)return;
+    animationFrame = requestAnimationFrame(animate);
 
     const now = performance.now();
-    const dt = now - lastFrameTime; // ms transcurridos, para la velocidad de la animación
+    const dt = Math.min(now - lastFrameTime, 50); // ms transcurridos, para la velocidad de la animación
     lastFrameTime = now;
     // Reloj de la cámara cinematográfica, acotado para evitar saltos si la
     // pestaña estuvo un momento en segundo plano.
@@ -3207,17 +3654,37 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
         if (done) done();
       }
     } else if (mode === 'exterior') {
-      view.target.copy(EXT_TARGET);
-      view.radius = 17;
+      // Al abrir la fachada, elevar suavemente el punto al que mira la cámara
+      // para dejar el pico del tejado dentro del encuadre sin alejar la casita.
+      const framing = exteriorFraming();
+      const desiredExteriorY = framing.target.y;
+      const centerSmoothing = 1 - Math.exp(-Math.min(dt, 100) / 240);
+      view.target.set(
+        view.target.x + (framing.target.x - view.target.x) * centerSmoothing,
+        view.target.y + (desiredExteriorY - view.target.y) * centerSmoothing,
+        EXT_TARGET.z
+      );
+      // Interpolación suave (~1 s) al retirar o reponer la fachada.
+      // La cámara permanece centrada y los raycasts siguen la misma cámara.
+      const targetRadius = framing.radius;
+      const smoothing = 1 - Math.exp(-Math.min(dt, 100) / 240);
+      exteriorCameraRadius += (targetRadius - exteriorCameraRadius) * smoothing;
+      if (Math.abs(exteriorCameraRadius - targetRadius) < 0.002) exteriorCameraRadius = targetRadius;
+      view.radius = exteriorCameraRadius;
       view.theta = 0;
       view.phi = 1.43;
-    } else if (mode === 'interior') {
-      if (!catVideoModal.classList.contains('visible') && !tartaloVideoModal.classList.contains('visible') && !salonVideoModal.classList.contains('visible') && !salonPaintingVideoModal.classList.contains('visible') && !pigVideoModal.classList.contains('visible') && !ghostVideoModal.classList.contains('visible') && !rapunzelPdfModal.classList.contains('visible')) movePlayer();
+    } else if (mode === 'interior' && !window.PortfolioDocuments?.isActive()) {
+      if (!catVideoModal.classList.contains('visible') && !tartaloVideoModal.classList.contains('visible') && !salonVideoModal.classList.contains('visible') && !salonPaintingVideoModal.classList.contains('visible') && !pigVideoModal.classList.contains('visible') && !ghostVideoModal.classList.contains('visible') && !rapunzelPdfModal.classList.contains('visible')) movePlayer(dt);
+      if (player.state === 'walking' && camera.view?.enabled && camera.view.fullWidth > camera.view.width) {
+        const target = clamp((player.x - activeRoom.interiorXMin) / INTERIOR_WIDTH, 0, 1);
+        cameraPan.value = lerp(Number(cameraPan.value), target, 1 - Math.exp(-dt / 180));
+        updateRoomCrop();
+      }
       updateBedroomSleepSwap();
       updateCharacterSprite();
       updateCharacterAnimation(dt);
       updateCandleFollow();
-      if (activeRoom) updateInteriorCinematicCamera(activeRoom, Math.min(dt, 100));
+      // Cámara fija: el personaje se mueve, pero la habitación permanece estática.
     }
 
     candle.intensity += (candleTarget - candle.intensity) * 0.08;
@@ -3227,12 +3694,15 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
       updateCameraFromView();
     }
 
-    // Renderizar solo dentro del viewport 16:9 calculado en resizeRenderer.
-    // El canvas sigue ocupando toda la pantalla, pero no se deforma la imagen.
+    // Ambos escenarios ocupan el viewport completo sin estirar la geometría.
+    // El raycasting utiliza exactamente el mismo viewport.
     const vp = renderer.__fixedViewport;
     if (vp) {
       renderer.setViewport(vp.x, vp.y, vp.width, vp.height);
     }
+    camera.updateMatrixWorld();
+    scene.updateMatrixWorld();
+    updateTouchHints();
     // Sincronizar un enlace HTML real con la posición en pantalla del póster.
     // Evita los fallos de clic sobre planos 3D inclinados y funciona con ratón y táctil.
     if (mode === 'interior' && activeRoom && activeRoom.id === 'p1-der' && activeRoom.cemeteryPosterButton && !transition) {
@@ -3244,7 +3714,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
       const vp = renderer.__fixedViewport;
       const points = corners.map(([x,y]) => {
         const pt = picture.localToWorld(new THREE.Vector3(x,y,0)).project(camera);
-        return {x: vp.x + (pt.x+1)*vp.width/2, y: window.innerHeight - vp.y - (pt.y+1)*vp.height/2, z:pt.z};
+        return {x: vp.x + (pt.x+1)*vp.width/2, y: canvas.getBoundingClientRect().bottom - vp.y - (pt.y+1)*vp.height/2, z:pt.z};
       });
       const minX = Math.min(...points.map(p=>p.x)), maxX = Math.max(...points.map(p=>p.x));
       const minY = Math.min(...points.map(p=>p.y)), maxY = Math.max(...points.map(p=>p.y));
@@ -3256,8 +3726,45 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
         pigStoryLink.style.height = `${maxY-minY}px`;
       } else pigStoryLink.style.display = 'none';
     } else pigStoryLink.style.display = 'none';
-    renderer.render(scene, camera);
+    if(!window.PortfolioDocuments?.isActive())renderer.render(scene, camera);
   }
+
+  function suspendScene() {
+    if(animationFrame)cancelAnimationFrame(animationFrame);
+    animationFrame=0;
+    if(!suspendedAt)suspendedAt=performance.now();
+    resetMobileControls();isDragging=false;canvas.classList.remove('grabbing');
+  }
+  function recoverScene() {
+    if(document.hidden)return;
+    resetMobileControls();
+    if(contextLost)return;
+    const now=performance.now();
+    if(suspendedAt&&transition)transition.t0+=now-suspendedAt;
+    suspendedAt=0;lastFrameTime=now;
+    const inside=mode==='interior'&&activeRoom;
+    rooms.forEach(room=>{room.interiorGroup.visible=!!inside&&room===activeRoom;});
+    exteriorGroup.visible=!inside;hitboxGroup.visible=!inside;bgPlane.visible=false;
+    darkRoomGroup.visible=!inside&&!facadeVisible;
+    facadeMesh.visible=facadeVisible;pigMesh.visible=facadeVisible;
+    ambient.intensity=inside?AMBIENT_INTERIOR:AMBIENT_BASE;
+    dir.intensity=inside?DIR_INTERIOR:DIR_BASE;fill.intensity=inside?FILL_INTERIOR:FILL_BASE;
+    roomSideLight.intensity=inside?2.4:0;
+    characterSprite.visible=!!inside&&player.state!=='sleeping';
+    if(inside){if(activeRoom.sleepingCharacter)activeRoom.sleepingCharacter.visible=player.state==='sleeping';candleTarget=1.1;updateCandleFollow();}
+    else candleTarget=0;
+    candle.intensity=candleTarget;
+    if(mode!=='transition')loadingEl.classList.remove('visible');
+    renderer.resetState?.();renderer.setScissorTest(false);renderer.shadowMap.needsUpdate=true;
+    resizeRenderer();scene.updateMatrixWorld(true);window.PortfolioViewport?.refresh();
+    if(!animationFrame)animationFrame=requestAnimationFrame(animate);
+  }
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)suspendScene();else recoverScene();});
+  window.addEventListener('pagehide',suspendScene);
+  window.addEventListener('pageshow',recoverScene);
+  window.addEventListener('focus',recoverScene);
+  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;suspendScene();});
+  canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;recoverScene();});
 
   updateCameraFromView();
   animate();
@@ -3267,10 +3774,9 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
 <dialog id="explore-welcome" aria-labelledby="explore-welcome-title" aria-describedby="explore-welcome-instructions">
   <h2 id="explore-welcome-title">Esta casa guarda secretos…</h2>
   <div id="explore-welcome-instructions">
-    <p>Entra en las habitaciones y muévete con las flechas.</p>
-    <p>Pasa el ratón sobre los objetos: <strong>si aparece una calaverita, haz clic y descubre sus secretos.</strong></p>
+    <p>Entra en las habitaciones y descubre sus objetos: haz clic con el ratón o toca la pantalla. Muévete con las flechas, WASD o la cruceta táctil. Pulsa «?» para ver las pistas.</p>
   </div>
-  <form method="dialog"><button type="submit" autofocus>Explorar la casita</button></form>
+  <p id="asset-status" role="status">Preparando las ilustraciones y animaciones…</p><form method="dialog"><button type="submit" autofocus disabled>Explorar la casita</button></form>
 </dialog>
 <script>
 (() => {
@@ -3286,6 +3792,11 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     document.getElementById('portfolio-signature').classList.add('signature-started');
     document.getElementById('c').focus?.();
   });
+  welcome.addEventListener('cancel', e => {if (!window.__assetsReady) e.preventDefault();});
   welcome.showModal();
+  if (window.__assetsReady) {document.querySelector('#explore-welcome button').disabled = false;document.getElementById('asset-status').textContent = 'La casita está lista para explorar.';}
 })();
 </script>
+
+</body>
+</html>

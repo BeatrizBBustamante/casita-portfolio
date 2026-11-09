@@ -1,0 +1,1 @@
+PDF.js / pdfjs-dist 5.6.205, legacy build. Mozilla / Apache-2.0. Copia del runtime oficial incluido; fuentes, CMaps, perfiles ICC y WASM originales.
