@@ -322,7 +322,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #f2c9
   <audio id="exterior-music" src="https://res.cloudinary.com/dslosjjeb/video/upload/v1793180937/scary-house_tqhmhj.mp3" preload="none" loop></audio>
 
   <header id="portfolio-signature" aria-label="Portfolio de Beatriz Bustamante"><img src="./img/fachada/rotulo-portfolio.png" alt="PORTFOLIO — Beatriz Bustamante" draggable="false"></header>
-  <a id="pig-story-link" href="https://beatrizbbustamante.github.io/Cementerio-Sostenible-04-11-26/" target="_blank" rel="noopener noreferrer" aria-label="Abrir el Cuento interactivo del Cementerio Sostenible en una ventana nueva" title="Cuento del Cementerio Sostenible — abrir en una ventana nueva"></a>
+  <a id="pig-story-link" href="https://beatrizbbustamante.github.io/Cementerio-Sostenible-04-11-26/" target="_blank" rel="noopener noreferrer" aria-label="Cementerio Sostenible" title="Cementerio Sostenible"></a>
   <div id="hint">Haz clic en la fachada para ver las habitaciones</div>
   <div id="interior-controls">WASD / Flechas = caminar · Esc = volver a la casa</div>
   <div id="room-loading">Entrando...</div>
@@ -1824,6 +1824,11 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
       room.sofaSeatXMin = cx + (sofaSeatLeftRatio - 0.5) * sofaWidth;
       room.sofaSeatXMax = cx + (sofaSeatRightRatio - 0.5) * sofaWidth;
 
+      // El respaldo existe entre x=350 y x=1150 de la ilustración.
+      // El margen mantiene el cuerpo sentado dentro de sus bordes.
+      room.sofaBackrestXMin = cx + (350 / 1491 - 0.5) * sofaWidth + 0.4;
+      room.sofaBackrestXMax = cx + (1150 / 1491 - 0.5) * sofaWidth - 0.4;
+
       // PUNTO FÍSICO DE SENTADO: más bajo y un poco más hacia delante,
       // para que la muñeca quede realmente hundida en el cojín, como en
       // la referencia: el cuerpo queda por debajo del borde superior del
@@ -1909,6 +1914,43 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
       tartaloButton.renderOrder = 22;
       group.add(tartaloButton);
       room.kitchenTartaloButton = tartaloButton;
+
+      // Storyboard vertical, fijado al plano de la pared derecha.
+      const storyboardTexture = new THREE.TextureLoader().load(
+        'https://res.cloudinary.com/dslosjjeb/image/upload/f_auto,q_auto/v1794842365/P%C3%A1gina_de_storyboard_a_l%C3%A1piz%E0%B2%BF%E0%B2%B8%E0%B2%BF%E0%B2%A6%E0%B2%B0%E0%B3%81-2_xpn2lr.png'
+      );
+      storyboardTexture.colorSpace = THREE.SRGBColorSpace;
+      storyboardTexture.anisotropy = 4;
+      const storyboardWidth = 1.20;
+      const storyboardHeight = 1.60;
+      const storyboardFrame = new THREE.Mesh(
+        new THREE.PlaneGeometry(storyboardWidth + 0.08, storyboardHeight + 0.08),
+        new THREE.MeshBasicMaterial({color: 0x121011, side: THREE.DoubleSide})
+      );
+      storyboardFrame.position.set(xMax - 0.055, baseY + 2.85, 0.35);
+      storyboardFrame.rotation.y = -Math.PI / 2;
+      group.add(storyboardFrame);
+
+      // Pequeñas marcas de desgaste en el marco, fuera de la ilustración.
+      const wearGeometry = new THREE.BufferGeometry();
+      wearGeometry.setAttribute('position', new THREE.Float32BufferAttribute([
+        -0.635, 0.72, 0.002, -0.615, 0.62, 0.002,
+        0.625, -0.58, 0.002, 0.625, -0.69, 0.002,
+        -0.37, 0.825, 0.002, -0.23, 0.825, 0.002,
+        0.24, -0.83, 0.002, 0.33, -0.83, 0.002
+      ], 3));
+      storyboardFrame.add(new THREE.LineSegments(wearGeometry,
+        new THREE.LineBasicMaterial({color: 0x655c57, transparent: true, opacity: 0.55})
+      ));
+      const storyboardPoster = new THREE.Mesh(
+        new THREE.PlaneGeometry(storyboardWidth, storyboardHeight),
+        new THREE.MeshBasicMaterial({map: storyboardTexture, side: THREE.DoubleSide})
+      );
+      storyboardPoster.position.copy(storyboardFrame.position);
+      storyboardPoster.position.x -= 0.008;
+      storyboardPoster.rotation.copy(storyboardFrame.rotation);
+      group.add(storyboardPoster);
+      room.kitchenStoryboardButton = storyboardPoster;
 
       // Isla central: primer plano, delante de la muñeca, como en la captura.
       // Su anchura deja pasillos transitables a ambos lados.
@@ -2590,7 +2632,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
   },true);
 
   // Objetos interactivos para el cursor de calaverita; sin destellos ni contornos.
-  const sparkTargets = ['kitchenDoorButton','kitchenTartaloButton','bedroomBooksButton','bedroomMirror','salonBooksButton','salonPaintingButton',
+  const sparkTargets = ['kitchenDoorButton','kitchenTartaloButton','kitchenStoryboardButton','bedroomBooksButton','bedroomMirror','salonBooksButton','salonPaintingButton',
     'rapunzelPictureButton','pigClickArea','studyCatButton','studySkullButton','cemeteryPosterButton'];
   function hitStudySkull() {
     if (mode!=='interior' || !activeRoom || activeRoom.id!=='p1-der') return false;
@@ -2685,21 +2727,32 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     raycaster.setFromCamera(pointerNDC, camera);
     return raycaster.intersectObject(pedSkull, false).length > 0;
   }
-  // La nariz se detecta en coordenadas UV de la imagen del cerdito, no de pantalla.
-  // Así el punto interactivo sigue la nariz al cambiar la resolución o el encuadre.
+  // La silueta opaca de Poewee se detecta en las coordenadas UV del dibujo.
+  // Las zonas transparentes dejan pasar el clic al resto de la portada.
   const pigGrunt = new Audio('https://res.cloudinary.com/dslosjjeb/video/upload/v1784472808/freesound_community-pig-grunt-100272_m2wsef.mp3');
   pigGrunt.preload = 'none';
   pigGrunt.volume = 0.75;
-  function pigNoseAtPointer(e) {
+  let pigHitMask = null;
+  function pigAtPointer(e) {
     if (mode !== 'exterior' || !facadeVisible || !pigMesh.visible) return false;
     setPointerFromEvent(e);
     raycaster.setFromCamera(pointerNDC, camera);
     const hits = raycaster.intersectObject(pigMesh, false);
     if (!hits.length || !hits[0].uv) return false;
-    // Coordenadas sobre cerdo-fachada.webp (1487 x 1836 píxeles).
-    const px = hits[0].uv.x * 1487;
-    const py = (1 - hits[0].uv.y) * 1836;
-    return ((px - 880) / 130) ** 2 + ((py - 341) / 103) ** 2 <= 1;
+    if (!pigHitMask) {
+      const image = pigTexture.image;
+      if (!image?.complete) return false;
+      const mask = document.createElement('canvas');
+      mask.width = image.naturalWidth;
+      mask.height = image.naturalHeight;
+      const context = mask.getContext('2d', {willReadFrequently: true});
+      context.drawImage(image, 0, 0);
+      pigHitMask = {width: mask.width, height: mask.height,
+        data: context.getImageData(0, 0, mask.width, mask.height).data};
+    }
+    const x = Math.min(pigHitMask.width - 1, Math.floor(hits[0].uv.x * pigHitMask.width));
+    const y = Math.min(pigHitMask.height - 1, Math.floor((1 - hits[0].uv.y) * pigHitMask.height));
+    return pigHitMask.data[(y * pigHitMask.width + x) * 4 + 3] > 24;
   }
   function playPigGrunt() {
     pigGrunt.pause();
@@ -2735,14 +2788,30 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     wolfSound.play().catch(() => {});
   }
 
+  function openKitchenStoryboard() {
+    Object.keys(keys).forEach(key => { keys[key] = false; });
+    window.PortfolioDocuments.openPdf(
+      'https://beatrizbbustamante.github.io/casita-portfolio/documentos/Rapunzel_2026_Proceso_creativo.pdf',
+      'Rapunzel · Proceso creativo'
+    );
+  }
+
   canvas.addEventListener('pointerdown', e => {
-    if (pigNoseAtPointer(e)) { playPigGrunt(); e.preventDefault(); e.stopPropagation(); return; }
+    if (pigAtPointer(e)) { playPigGrunt(); e.preventDefault(); e.stopPropagation(); return; }
     if (skullAtPointer(e)) { playWitchGiggle(); e.preventDefault(); e.stopPropagation(); return; }
     if (moonAtEvent(e)) { playWolf(); e.preventDefault(); e.stopPropagation(); return; }
     if (crowAtEvent(e)) { playCrow(); e.preventDefault(); e.stopPropagation(); return; }
     if (batAtEvent(e)) { playBatSqueak(); e.preventDefault(); e.stopPropagation(); return; }
     if (mode === 'transition') return;
 
+
+    if (mode === 'interior' && activeRoom && activeRoom.kitchenStoryboardButton) {
+      setPointerFromEvent(e);
+      raycaster.setFromCamera(pointerNDC, camera);
+      if (raycaster.intersectObject(activeRoom.kitchenStoryboardButton, false).length) {
+        openKitchenStoryboard(); e.preventDefault(); e.stopPropagation(); return;
+      }
+    }
 
     // Armario superior derecho de la Cocina: vídeo de Tártalo.
     if (mode === 'interior' && activeRoom && activeRoom.id === 'pb-der' && activeRoom.kitchenTartaloButton) {
@@ -2894,7 +2963,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     }
 
     if (mode === 'exterior') {
-      if (pigNoseAtPointer(e) || skullAtPointer(e) || moonAtEvent(e) || crowAtEvent(e) || batAtEvent(e)) { canvas.classList.add('hoverable'); return; }
+      if (pigAtPointer(e) || skullAtPointer(e) || moonAtEvent(e) || crowAtEvent(e) || batAtEvent(e)) { canvas.classList.add('hoverable'); return; }
       setPointerFromEvent(e);
       raycaster.setFromCamera(pointerNDC, camera);
 
@@ -3041,17 +3110,16 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     if (mode !== 'interior' || !activeRoom || activeRoom.id !== 'pb-izq') return false;
     if (!activeRoom.sofaSeat || player.state !== 'walking' || turnState) return false;
 
-    const seatXMin = activeRoom.sofaSeatXMin ?? activeRoom.sofaSeat.x;
-    const seatXMax = activeRoom.sofaSeatXMax ?? activeRoom.sofaSeat.x;
+    const seatXMin = activeRoom.sofaBackrestXMin;
+    const seatXMax = activeRoom.sofaBackrestXMax;
     const seatY = activeRoom.sofaSeatY ?? activeRoom.sofaSeat.y;
     const seatZ = activeRoom.sofaSeatZ ?? activeRoom.sofaSeat.z;
 
-    // Puede sentarse en TODO el cojín. Conservamos el x donde ha llegado
-    // y solo lo limitamos al área útil entre los dos brazos.
+    // Conserva la pose sobre el respaldo, dentro del tramo que ofrece apoyo.
     const targetX = Math.max(seatXMin, Math.min(seatXMax, player.x));
     const dz = player.z - seatZ;
-    const reachedCushion = player.x >= seatXMin - 0.18 &&
-                           player.x <= seatXMax + 0.18 &&
+    const reachedCushion = player.x >= seatXMin &&
+                           player.x <= seatXMax &&
                            Math.abs(dz) <= 0.48;
 
     if (reachedCushion) {
@@ -3510,11 +3578,12 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
         salonPaintingButton:['Vídeo del retrato',openSalonPaintingVideo],
         kitchenDoorButton:['Desarrollo de personajes',openPersonajes],
         kitchenTartaloButton:['Vídeo de Tártalo',openTartaloVideo],
+        kitchenStoryboardButton:['Leer el proceso creativo de Rapunzel',openKitchenStoryboard],
         bedroomBooksButton:['Leer Abismo',openAbismo],
         bedroomMirror:['Sobre mí',()=>{resetMobileControls();mirrorReportModal.classList.add('visible');mirrorReportClose.focus();}],
         studyCatButton:['Vídeo del gato',openCatVideo],
         studySkullButton:['Vídeo del fantasma',openGhostVideo],
-        cemeteryPosterButton:['Abrir cuento interactivo',openCemeteryStory],
+        cemeteryPosterButton:['Cementerio Sostenible',openCemeteryStory],
         rapunzelPictureButton:['Leer Rapunzel',openRapunzelPdf],
         pigPictureButton:['Vídeo Pig Fiction',openPigVideo]
       };
@@ -3774,13 +3843,31 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
 <dialog id="explore-welcome" aria-labelledby="explore-welcome-title" aria-describedby="explore-welcome-instructions">
   <h2 id="explore-welcome-title">Esta casa guarda secretos…</h2>
   <div id="explore-welcome-instructions">
-    <p>Entra en las habitaciones y descubre sus objetos: haz clic con el ratón o toca la pantalla. Muévete con las flechas, WASD o la cruceta táctil. Pulsa «?» para ver las pistas.</p>
+    <p id="welcome-mouse">Entra en las habitaciones y descubre sus objetos con un clic. Muévete con las flechas o WASD. Pulsa «?» para ver las pistas.</p>
+    <p id="welcome-touch" hidden>Entra en las habitaciones y descubre sus objetos tocando la pantalla. Muévete con la cruceta. Toca «?» para ver las pistas.</p>
   </div>
   <p id="asset-status" role="status">Preparando las ilustraciones y animaciones…</p><form method="dialog"><button type="submit" autofocus disabled>Explorar la casita</button></form>
 </dialog>
 <script>
 (() => {
   const welcome = document.getElementById('explore-welcome');
+  const mouseCapabilities = matchMedia('(hover: hover) and (pointer: fine)');
+  const touchCapabilities = matchMedia('(any-pointer: coarse)');
+  function updateWelcomeInstructions(useTouch = !mouseCapabilities.matches &&
+    (touchCapabilities.matches || navigator.maxTouchPoints > 0)) {
+    document.getElementById('welcome-mouse').hidden = useTouch;
+    document.getElementById('welcome-touch').hidden = !useTouch;
+  }
+  updateWelcomeInstructions();
+  mouseCapabilities.addEventListener('change', () => updateWelcomeInstructions());
+  touchCapabilities.addEventListener('change', () => updateWelcomeInstructions());
+  welcome.addEventListener('pointerdown', event => {
+    if (event.pointerType === 'touch' || event.pointerType === 'pen') updateWelcomeInstructions(true);
+    else if (event.pointerType === 'mouse') updateWelcomeInstructions(false);
+  });
+  window.addEventListener('keydown', event => {
+    if (welcome.open) updateWelcomeInstructions(false);
+  }, true);
   // Evita que las teclas de la bienvenida muevan al personaje o activen la casa.
   for (const type of ['keydown', 'keyup']) {
     window.addEventListener(type, event => {
