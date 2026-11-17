@@ -57,3 +57,7 @@
 #room-shortcuts button span{font-size:11px;color:#d5bbef}
 #room-shortcuts{position:fixed;top:calc(var(--visible-top,0px) + max(58px,calc(env(safe-area-inset-top) + 58px)));right:auto;left:calc(var(--visible-left,0px) + var(--visible-width,100vw) - max(8px,env(safe-area-inset-right)));transform:translateX(-100%);width:min(260px,calc(var(--visible-width,100vw) - 24px))}
 #hint{position:fixed;top:calc(var(--visible-top,0px) + max(64px,calc(env(safe-area-inset-top) + 60px)));left:calc(var(--visible-left,0px) + var(--visible-width,100vw)/2);width:calc(var(--visible-width,100vw) - 32px)}
+/* Solo tablets táctiles: suprime el velo nativo, no los estados visuales de la interfaz. */
+@media (pointer: coarse) and (min-device-width: 600px) and (min-device-height: 600px) {
+  html { -webkit-tap-highlight-color: transparent; }
+}
