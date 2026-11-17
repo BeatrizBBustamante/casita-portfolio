@@ -431,6 +431,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #f2c9
   };
   const canvas = document.getElementById('c');
   const portfolioSignature = document.getElementById('portfolio-signature');
+  const signatureLandscapeMedia = matchMedia('(pointer: coarse) and (orientation: landscape) and (max-height: 500px)');
+  let signaturePlacement = null;
   // Enlace del cuadro TRES CERDITOS del ESTUDIO; no es la nariz del cerdo de la fachada.
   const pigStoryLink = document.getElementById('pig-story-link');
   pigStoryLink.addEventListener('pointerdown', e => e.stopPropagation());
@@ -3646,6 +3648,49 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     camera.updateProjectionMatrix();
   }
   cameraPan.addEventListener('input', updateRoomCrop);
+  function updateLandscapeSignature() {
+    if (!signatureLandscapeMedia.matches || mode !== 'exterior' || !facadeVisible || !signaturePlacement) return;
+
+    function screenBounds(mesh) {
+      const geometry = mesh.geometry.parameters;
+      const viewport = renderer.__fixedViewport;
+      mesh.updateWorldMatrix(true, false);
+      const corners = [[-.5, -.5], [-.5, .5], [.5, -.5], [.5, .5]].map(([x, y]) => {
+        const point = mesh.localToWorld(new THREE.Vector3(x * geometry.width, y * geometry.height, 0)).project(camera);
+        return {x: viewport.x + (point.x + 1) * viewport.width / 2,
+          y: canvas.clientHeight - viewport.y - (point.y + 1) * viewport.height / 2};
+      });
+      return {left: Math.min(...corners.map(p => p.x)), right: Math.max(...corners.map(p => p.x)),
+        top: Math.min(...corners.map(p => p.y)), bottom: Math.max(...corners.map(p => p.y))};
+    }
+
+    const house = screenBounds(facadeMesh), pig = screenBounds(pigMesh);
+    const button = document.getElementById('quick-portfolio-link').getBoundingClientRect();
+    const original = signaturePlacement;
+    const originalBottom = original.top + original.width * 218 / 735;
+    const overlaps = box => original.left < box.right && original.left + original.width > box.left &&
+      original.top < box.bottom && originalBottom > box.top;
+    let placement = original;
+    if ([house, pig, button].some(overlaps)) {
+      const viewport = window.visualViewport;
+      const right = Math.min(canvas.clientWidth, (viewport?.offsetLeft || 0) + (viewport?.width || canvas.clientWidth));
+      const bottom = Math.min(canvas.clientHeight, (viewport?.offsetTop || 0) + (viewport?.height || canvas.clientHeight));
+      const toolsRight = document.getElementById('scene-tools').getBoundingClientRect().right;
+      const rightEdge = right - Math.max(18, right - toolsRight);
+      const bottomEdge = bottom - Math.max(12, parseFloat(getComputedStyle(document.getElementById('quick-portfolio-link')).bottom) || 0);
+      const leftEdge = Math.max((viewport?.offsetLeft || 0) + 18, pig.right + 10, button.right + 10);
+      const width = Math.max(1, Math.min(original.width, rightEdge - leftEdge, (bottomEdge - house.bottom - 10) * 735 / 218));
+      placement = {width, left: clamp(original.left, leftEdge, rightEdge - width), top: bottomEdge - width * 218 / 735};
+    }
+    // El margen absorbe el temblor de cámara sin hacer vibrar el rótulo.
+    if (Math.abs(parseFloat(portfolioSignature.style.left) - placement.left) < 2 &&
+        Math.abs(parseFloat(portfolioSignature.style.top) - placement.top) < 2 &&
+        Math.abs(parseFloat(portfolioSignature.style.width) - placement.width) < 2) return;
+    portfolioSignature.style.width = placement.width + 'px';
+    portfolioSignature.style.left = placement.left + 'px';
+    portfolioSignature.style.top = placement.top + 'px';
+  }
+
   function resizeRenderer() {
     const width = Math.max(1, canvas.clientWidth || window.innerWidth || 680);
     const height = Math.max(1, canvas.clientHeight || window.innerHeight || 520);
@@ -3677,6 +3722,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     portfolioSignature.style.width=titleWidth+'px';
     portfolioSignature.style.left=clamp(background.x+1813*.5137*background.scale,titleMargin,width-titleWidth-titleMargin)+'px';
     portfolioSignature.style.top=clamp(background.y+868*.6373*background.scale,70,height-titleHeight-70)+'px';
+    signaturePlacement = {width: titleWidth, left: parseFloat(portfolioSignature.style.left), top: parseFloat(portfolioSignature.style.top)};
     if (mode === 'exterior') {
       const framing=exteriorFraming();view.target.copy(framing.target);view.radius=exteriorCameraRadius=framing.radius;updateCameraFromView();
     }
@@ -3687,9 +3733,11 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
       updateRoomCrop();
     }
     document.getElementById('room-camera').style.display = mode === 'interior' && windowAspect < DESIGN_ASPECT - 0.05 ? 'block' : 'none';
+    updateLandscapeSignature();
   }
 
   window.addEventListener('resize', resizeRenderer);
+  signatureLandscapeMedia.addEventListener('change', resizeRenderer);
   window.visualViewport?.addEventListener('resize', resizeRenderer);
   window.addEventListener('orientationchange', () => requestAnimationFrame(resizeRenderer));
   resizeRenderer();
@@ -3771,6 +3819,7 @@ const RUBIK_SIT_FRAME_DURATIONS = [3000, 1000, 1000, 1000, 1000, 1000, 3000];
     }
     camera.updateMatrixWorld();
     scene.updateMatrixWorld();
+    updateLandscapeSignature();
     updateTouchHints();
     // Sincronizar un enlace HTML real con la posición en pantalla del póster.
     // Evita los fallos de clic sobre planos 3D inclinados y funciona con ratón y táctil.
